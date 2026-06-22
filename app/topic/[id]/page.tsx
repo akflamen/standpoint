@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import Link from 'next/link'
@@ -275,7 +275,7 @@ export default function TopicPage() {
   }
 
   // Build nested tree structure
-  function buildTree(notes: Note[], parentId: string | null = null, depth = 0): JSX.Element[] {
+  function buildTree(notes: Note[], parentId: string | null = null, depth = 0): React.ReactNode[] {
     return notes
       .filter(n => n.parent_note_id === parentId)
       .map(note => (
