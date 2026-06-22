@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin, supabase } from '@/lib/supabase'
+import { supabaseAdmin, supabase } from '../lib/supabase'
 
 // GET — public, returns all approved topics
 export async function GET() {
