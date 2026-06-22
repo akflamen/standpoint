@@ -43,7 +43,7 @@ export default function AuthPage() {
             We will never show this again.
           </p>
           <div className="bg-[#faf8f4] border border-[#d4c4a8] rounded p-4 mb-4">
-            <p className="text-sm font-mono text-[#2c1810] leading-relaxed break-words">
+            <p className="text-sm font-mono text-[#2c1810] leading-relaxed wrap-break-words">
               {recoveryPhrase}
             </p>
           </div>

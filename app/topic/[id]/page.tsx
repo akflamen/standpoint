@@ -142,7 +142,7 @@ function NoteCard({
               >
                 ▲
               </button>
-              <span className="text-xs font-semibold text-[#2c1810] min-w-[20px] text-center">
+              <span className="text-xs font-semibold text-[#2c1810] min-w-5 text-center">
                 {note.score}
               </span>
               <button
