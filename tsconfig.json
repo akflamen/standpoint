@@ -32,10 +32,8 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "next/types/**/*.ts",
-    "next/dev/types/**/*.ts",
-    "**/*.mts",
     ".next/types/**/*.ts",
+    "proxy.ts",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [

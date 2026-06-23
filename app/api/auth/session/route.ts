@@ -15,7 +15,7 @@ export async function GET() {
       )
     }
 
-    // Validate session
+    // Validate session in database
     const { data: session, error } = await supabase
       .from('sessions')
       .select('user_id, expires_at')
@@ -32,6 +32,7 @@ export async function GET() {
     // Check if session expired
     const expiresAt = new Date(session.expires_at)
     if (expiresAt < new Date()) {
+      // Delete expired session
       await supabase
         .from('sessions')
         .delete()

@@ -17,12 +17,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Clear cookie
-    cookieStore.delete('session_token')
-
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Logged out successfully'
     })
+    response.cookies.delete('session_token')
+    
+    return response
 
   } catch (error) {
     console.error('Logout error:', error)
