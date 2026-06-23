@@ -4,6 +4,7 @@ import { generateRecoveryPhrase } from '@/lib/phrases'
 import { enforceRateLimit, getRequestIp } from '@/lib/rate-limit'
 import { supabaseAdmin } from '@/lib/supabase'
 import { VOTE_WEIGHT } from '@/lib/vote-weight'
+import { attachSessionCookie, createSession } from '@/lib/session'
 
 export async function POST(req: NextRequest) {
   try {
@@ -65,16 +66,20 @@ export async function POST(req: NextRequest) {
     const passwordHash = await hashPassword(password)
     const phraseHash = await hashPhrase(recoveryPhrase)
 
-    const { error } = await supabaseAdmin.from('accounts').insert({
-      username: trimmedUsername,
-      password_hash: passwordHash,
-      phrase_hash: phraseHash,
-      premium: false,
-      banned: false,
-      vote_weight: VOTE_WEIGHT.NEW_USER,
-    })
+    const { data: newAccount, error } = await supabaseAdmin
+      .from('accounts')
+      .insert({
+        username: trimmedUsername,
+        password_hash: passwordHash,
+        phrase_hash: phraseHash,
+        premium: false,
+        banned: false,
+        vote_weight: VOTE_WEIGHT.NEW_USER,
+      })
+      .select('id')
+      .single()
 
-    if (error) {
+    if (error || !newAccount) {
       console.error('Signup insert error:', error)
       return NextResponse.json(
         { error: 'Could not create account' },
@@ -82,10 +87,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    return NextResponse.json({
+    const token = await createSession(newAccount.id, false)
+
+    const response = NextResponse.json({
       username: trimmedUsername,
       recoveryPhrase,
     })
+    attachSessionCookie(response, token, false)
+
+    return response
   } catch (err) {
     console.error('Signup error:', err)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })

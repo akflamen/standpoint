@@ -97,10 +97,10 @@ export default function SignupPage() {
           <button
             type="button"
             disabled={!copied}
-            onClick={() => router.push('/auth/login')}
+            onClick={() => router.push('/')}
             className="mt-6 w-full py-2.5 rounded-lg bg-[#2c1810] text-[#f5f0e8] font-medium disabled:opacity-40 hover:bg-[#4a2c1a] transition-colors"
           >
-            Continue to login
+            Continue to homepage
           </button>
         </div>
       </div>
