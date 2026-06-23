@@ -23,7 +23,7 @@ export async function verifyPassword(
   return hash === verifyHash
 }
 
-// Hash security phrase (same as password hashing)
+// Hash security phrase
 export async function hashPhrase(phrase: string): Promise<string> {
   return hashPassword(phrase)
 }
@@ -60,10 +60,9 @@ export async function updateUserPassword(userId: string, newPassword: string) {
   return true
 }
 
-// Get session from cookie
+// Get session from cookie (server-side)
 export async function getSession(): Promise<{ username: string; token: string } | null> {
   try {
-    // Get session token from cookies (server-side)
     const { cookies } = await import('next/headers')
     const cookieStore = await cookies()
     const sessionToken = cookieStore.get('session_token')?.value
@@ -72,7 +71,6 @@ export async function getSession(): Promise<{ username: string; token: string } 
       return null
     }
 
-    // Validate session in database
     const { data: session, error } = await supabase
       .from('sessions')
       .select('user_id, expires_at')
@@ -83,10 +81,8 @@ export async function getSession(): Promise<{ username: string; token: string } 
       return null
     }
 
-    // Check if session expired
     const expiresAt = new Date(session.expires_at)
     if (expiresAt < new Date()) {
-      // Delete expired session
       await supabase
         .from('sessions')
         .delete()
@@ -94,7 +90,6 @@ export async function getSession(): Promise<{ username: string; token: string } 
       return null
     }
 
-    // Get user info
     const { data: user } = await supabase
       .from('accounts')
       .select('username')
@@ -116,10 +111,9 @@ export async function getSession(): Promise<{ username: string; token: string } 
   }
 }
 
-// Get session for client-side usage (with cookie parsing)
+// Get session for client-side usage
 export async function getClientSession(): Promise<{ username: string; token: string } | null> {
   try {
-    // For client-side, we need to call the API
     const response = await fetch('/api/auth/session', {
       method: 'GET',
       headers: {

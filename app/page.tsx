@@ -1,170 +1,117 @@
+// app/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getSession, clearSession } from '@/lib/auth'
+import { useRouter } from 'next/navigation'
 
 interface Topic {
   id: string
   title: string
-  description: string | null
+  description: string
   created_at: string
+  vote_count: number
 }
 
 export default function HomePage() {
+  const router = useRouter()
   const [topics, setTopics] = useState<Topic[]>([])
   const [loading, setLoading] = useState(true)
-  const [session, setSession] = useState<{ username: string; token: string } | null>(null)
-  const [showSuggest, setShowSuggest] = useState(false)
-  const [suggestionTitle, setSuggestionTitle] = useState('')
-  const [suggestionDesc, setSuggestionDesc] = useState('')
-  const [suggestionMsg, setSuggestionMsg] = useState('')
+  const [session, setSession] = useState<any>(null)
 
   useEffect(() => {
-    setSession(getSession())
-    fetchTopics()
+    async function loadData() {
+      try {
+        // Check session
+        const sessionRes = await fetch('/api/auth/session')
+        if (sessionRes.ok) {
+          const sessionData = await sessionRes.json()
+          setSession(sessionData.session)
+        }
+
+        // Load topics
+        const topicsRes = await fetch('/api/topics')
+        if (topicsRes.ok) {
+          const data = await topicsRes.json()
+          setTopics(data.topics || [])
+        }
+      } catch (error) {
+        console.error('Error loading data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
   }, [])
 
-  async function fetchTopics() {
-    try {
-      const res = await fetch('/api/topics')
-      const data = await res.json()
-      setTopics(data.topics || [])
-    } catch {
-      console.error('Failed to fetch topics')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function submitSuggestion() {
-    if (!session) return
-    setSuggestionMsg('')
-    try {
-      const res = await fetch('/api/topics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: suggestionTitle,
-          description: suggestionDesc,
-          token: session.token,
-          username: session.username,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      setSuggestionMsg('Topic submitted for review!')
-      setSuggestionTitle('')
-      setSuggestionDesc('')
-    } catch (err: unknown) {
-      setSuggestionMsg(err instanceof Error ? err.message : 'Something went wrong')
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading topics...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f0e8]">
-      {/* Header */}
-      <header className="bg-[#2c1810] text-[#f5f0e8] px-6 py-4 flex items-center justify-between shadow-md">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Standpoint</h1>
-          <p className="text-xs text-[#c4a882] mt-0.5">Anonymous debate. Real ideas.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          {session ? (
-            <>
-              <span className="text-sm text-[#c4a882]">@{session.username}</span>
-              <button
-                onClick={() => { clearSession(); setSession(null) }}
-                className="text-xs bg-[#f5f0e8] text-[#2c1810] px-3 py-1.5 rounded hover:bg-[#c4a882] transition-colors"
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow p-4">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">Standpoint</h1>
+          <div className="space-x-4">
+            {session ? (
+              <Link
+                href="/profile"
+                className="text-blue-600 hover:text-blue-800"
               >
-                Logout
-              </button>
-            </>
-          ) : (
-            <Link
-              href="/auth"
-              className="text-xs bg-[#f5f0e8] text-[#2c1810] px-3 py-1.5 rounded hover:bg-[#c4a882] transition-colors font-medium"
-            >
-              Sign in
-            </Link>
-          )}
-        </div>
-      </header>
-
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* Topics heading */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-[#2c1810]">Open Topics</h2>
-          {session && (
-            <button
-              onClick={() => setShowSuggest(!showSuggest)}
-              className="text-sm bg-[#2c1810] text-[#f5f0e8] px-4 py-2 rounded hover:bg-[#4a2c1a] transition-colors"
-            >
-              + Suggest Topic
-            </button>
-          )}
-        </div>
-
-        {/* Suggest topic form */}
-        {showSuggest && session && (
-          <div className="bg-white border border-[#d4c4a8] rounded-lg p-4 mb-6 shadow-sm">
-            <h3 className="text-sm font-semibold text-[#2c1810] mb-3">Suggest a Topic</h3>
-            <input
-              type="text"
-              placeholder="Topic title (5-100 characters)"
-              value={suggestionTitle}
-              onChange={e => setSuggestionTitle(e.target.value)}
-              className="w-full border border-[#d4c4a8] rounded px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#2c1810] bg-[#faf8f4]"
-            />
-            <textarea
-              placeholder="Optional description..."
-              value={suggestionDesc}
-              onChange={e => setSuggestionDesc(e.target.value)}
-              rows={2}
-              className="w-full border border-[#d4c4a8] rounded px-3 py-2 text-sm mb-3 focus:outline-none focus:border-[#2c1810] bg-[#faf8f4] resize-none"
-            />
-            {suggestionMsg && (
-              <p className="text-xs text-[#2c1810] mb-2">{suggestionMsg}</p>
+                Profile ({session.username})
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Sign Up
+                </Link>
+              </>
             )}
-            <button
-              onClick={submitSuggestion}
-              className="text-sm bg-[#2c1810] text-[#f5f0e8] px-4 py-2 rounded hover:bg-[#4a2c1a] transition-colors"
-            >
-              Submit
-            </button>
           </div>
-        )}
+        </div>
+      </nav>
 
-        {/* Topic list */}
-        {loading ? (
-          <p className="text-sm text-[#8b7355] text-center py-12">Loading topics...</p>
-        ) : topics.length === 0 ? (
-          <p className="text-sm text-[#8b7355] text-center py-12">No topics yet. Be the first to suggest one.</p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {topics.map(topic => (
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <h2 className="text-xl font-semibold mb-6">Anonymous Debate. Real Ideas.</h2>
+        
+        <div className="grid gap-4">
+          {topics.length === 0 ? (
+            <p className="text-gray-500">No topics yet. Create one!</p>
+          ) : (
+            topics.map((topic) => (
               <Link
                 key={topic.id}
                 href={`/topic/${topic.id}`}
-                className="block bg-white border border-[#d4c4a8] rounded-lg p-4 shadow-sm hover:shadow-md hover:border-[#2c1810] transition-all group"
+                className="block bg-white p-6 rounded-lg shadow hover:shadow-md transition"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="font-semibold text-[#2c1810] group-hover:underline">{topic.title}</h3>
-                    {topic.description && (
-                      <p className="text-sm text-[#8b7355] mt-1">{topic.description}</p>
-                    )}
-                  </div>
-                  <span className="text-[#c4a882] text-lg mt-0.5">→</span>
+                <h3 className="text-lg font-medium text-gray-900">{topic.title}</h3>
+                <p className="text-gray-600 mt-1">{topic.description}</p>
+                <div className="mt-2 text-sm text-gray-500">
+                  {topic.vote_count || 0} votes • {new Date(topic.created_at).toLocaleDateString()}
                 </div>
-                <p className="text-xs text-[#c4a882] mt-2">
-                  {new Date(topic.created_at).toLocaleDateString()}
-                </p>
               </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    </main>
+            ))
+          )}
+        </div>
+      </main>
+    </div>
   )
 }
