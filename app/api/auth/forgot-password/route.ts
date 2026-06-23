@@ -5,8 +5,8 @@ import { rateLimit } from '../../../../lib/rate-limit'
 
 // Rate Limiting: 3 attempts per hour
 const limiter = rateLimit({
-  interval: 60 * 60 * 1000, // 1 hour
-  uniqueTokenPerInterval: 500,
+  intervalMs: 60 * 60 * 1000, // 1 hour
+  action: 'forgot-password',   // Added this to identify the action in Supabase
 })
 
 export async function POST(req: NextRequest) {
