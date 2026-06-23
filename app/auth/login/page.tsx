@@ -1,12 +1,12 @@
-// app/auth/login/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -26,112 +26,96 @@ export default function LoginPage() {
       })
 
       const data = await response.json()
-
       if (!response.ok) {
         throw new Error(data.error || 'Login failed')
       }
 
-      router.push('/profile')
+      const next = searchParams.get('next') || '/'
+      router.push(next)
       router.refresh()
-
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <div>
-          <h2 className="text-3xl font-bold text-center text-gray-900">
-            Standpoint
-          </h2>
-          <p className="mt-2 text-center text-gray-600">
-            Log in to your account
-          </p>
-        </div>
-
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Username
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-              autoFocus
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 block text-sm text-gray-700">
-                Remember me
-              </label>
-            </div>
-
-            <Link
-              href="/auth/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              Forgot password?
-            </Link>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-50"
-          >
-            {loading ? 'Logging in...' : 'Log in'}
-          </button>
-        </form>
-
-        <div className="text-center">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link
-              href="/auth/signup"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              Sign up
-            </Link>
-          </p>
-          <p className="mt-2 text-xs text-gray-500">
-            Your private key stays on this device only.
-          </p>
-        </div>
+    <div className="max-w-md w-full bg-white border border-[#d4c4a8] rounded-2xl shadow-lg p-8">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-[#2c1810]">Standpoint</h2>
+        <p className="mt-2 text-[#8b7355]">Log in with username and password</p>
       </div>
+
+      {error && (
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-[#4a2c1a]">Username</label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
+            required
+            autoFocus
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-[#4a2c1a]">Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
+            required
+          />
+        </div>
+
+        <div className="flex items-center justify-between text-sm">
+          <label className="flex items-center gap-2 text-[#4a2c1a]">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+            />
+            Remember me
+          </label>
+          <Link href="/auth/forgot-password" className="text-[#2c1810] hover:underline">
+            Forgot password?
+          </Link>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-2.5 rounded-lg bg-[#2c1810] text-[#f5f0e8] font-medium disabled:opacity-50 hover:bg-[#4a2c1a] transition-colors"
+        >
+          {loading ? 'Logging in...' : 'Log in'}
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-[#8b7355]">
+        No account yet?{' '}
+        <Link href="/auth/signup" className="text-[#2c1810] font-medium hover:underline">
+          Sign up
+        </Link>
+      </p>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#f5f0e8] px-4">
+      <Suspense fallback={<div className="text-[#8b7355]">Loading...</div>}>
+        <LoginForm />
+      </Suspense>
     </div>
   )
 }

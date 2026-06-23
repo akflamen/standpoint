@@ -27,9 +27,10 @@ export async function POST(req: NextRequest) {
     }
 
     const { username, phrase, newPassword } = await req.json()
+    const normalizedPhrase = phrase?.trim().replace(/\s+/g, ' ')
 
     // Validate inputs
-    if (!username || !phrase || !newPassword) {
+    if (!username || !normalizedPhrase || !newPassword) {
       return NextResponse.json(
         { error: 'Username, security phrase, and new password are required' },
         { status: 400 }
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify security phrase
-    const isValidPhrase = await verifyPhrase(phrase, user.phrase_hash)
+    const isValidPhrase = await verifyPhrase(normalizedPhrase, user.phrase_hash)
     if (!isValidPhrase) {
       return NextResponse.json(
         { error: 'Invalid username or security phrase' },

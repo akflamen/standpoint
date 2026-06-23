@@ -1,35 +1,40 @@
-// app/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 interface Topic {
   id: string
   title: string
   description: string
   created_at: string
-  vote_count: number
+  note_count: number
+}
+
+interface Session {
+  username: string
+  premium: boolean
 }
 
 export default function HomePage() {
-  const router = useRouter()
   const [topics, setTopics] = useState<Topic[]>([])
   const [loading, setLoading] = useState(true)
-  const [session, setSession] = useState<any>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [showSuggest, setShowSuggest] = useState(false)
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [message, setMessage] = useState('')
 
   useEffect(() => {
     async function loadData() {
       try {
-        // Check session
         const sessionRes = await fetch('/api/auth/session')
         if (sessionRes.ok) {
           const sessionData = await sessionRes.json()
           setSession(sessionData.session)
         }
 
-        // Load topics
         const topicsRes = await fetch('/api/topics')
         if (topicsRes.ok) {
           const data = await topicsRes.json()
@@ -45,72 +50,205 @@ export default function HomePage() {
     loadData()
   }, [])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading topics...</p>
-        </div>
-      </div>
-    )
+  const handleSuggestTopic = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setMessage('')
+
+    if (!session) {
+      setMessage('Sign in to suggest a topic.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const response = await fetch('/api/topics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Could not submit topic')
+      }
+
+      setTitle('')
+      setDescription('')
+      setShowSuggest(false)
+      setMessage('Topic sent for admin review.')
+    } catch (err: unknown) {
+      setMessage(err instanceof Error ? err.message : 'Could not submit topic')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow p-4">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Standpoint</h1>
-          <div className="space-x-4">
+    <div className="sp-page min-h-screen">
+      <header className="sp-header border-b border-[var(--sp-border)]">
+        <div className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-[#c4a882]">
+              Anonymous debate
+            </p>
+            <h1 className="text-2xl md:text-3xl font-bold mt-1">Standpoint</h1>
+          </div>
+
+          <div className="flex items-center gap-3 text-sm">
             {session ? (
-              <Link
-                href="/profile"
-                className="text-blue-600 hover:text-blue-800"
-              >
-                Profile ({session.username})
-              </Link>
-            ) : (
               <>
                 <Link
-                  href="/auth/login"
-                  className="text-blue-600 hover:text-blue-800"
+                  href="/profile"
+                  className="hidden sm:inline text-[#f5f0e8] hover:text-[#c4a882] transition-colors"
                 >
-                  Login
+                  {session.username}
+                  {session.premium ? ' · Premium' : ''}
+                </Link>
+                {!session.premium && (
+                  <Link
+                    href="/premium"
+                    className="rounded-full bg-[#c4a882] text-[#2c1810] px-3 py-1.5 font-medium hover:bg-[#d4c4a8] transition-colors"
+                  >
+                    Go Premium
+                  </Link>
+                )}
+              </>
+            ) : (
+              <>
+                <Link href="/auth/login" className="hover:text-[#c4a882] transition-colors">
+                  Log in
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="rounded-full bg-[#f5f0e8] text-[#2c1810] px-3 py-1.5 font-medium hover:bg-[#d4c4a8] transition-colors"
                 >
-                  Sign Up
+                  Sign up
                 </Link>
               </>
             )}
           </div>
         </div>
-      </nav>
+      </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <h2 className="text-xl font-semibold mb-6">Anonymous Debate. Real Ideas.</h2>
-        
-        <div className="grid gap-4">
-          {topics.length === 0 ? (
-            <p className="text-gray-500">No topics yet. Create one!</p>
-          ) : (
-            topics.map((topic) => (
+      <main className="max-w-5xl mx-auto px-4 py-10">
+        <section className="rounded-2xl border sp-card p-6 md:p-8 shadow-sm">
+          <h2 className="text-3xl md:text-4xl font-bold leading-tight">
+            Real ideas. No identity.
+          </h2>
+          <p className="mt-3 max-w-2xl sp-body leading-relaxed">
+            Browse every topic without an account. Sign in only when you want to
+            write, vote, or suggest a new debate for admin approval.
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                if (!session) {
+                  setMessage('Sign in to suggest a topic.')
+                  return
+                }
+                setShowSuggest((value) => !value)
+              }}
+              className="rounded-lg bg-[#2c1810] text-[#f5f0e8] px-4 py-2.5 text-sm font-medium hover:bg-[#4a2c1a] transition-colors"
+            >
+              Suggest a topic
+            </button>
+            {!session && (
               <Link
-                key={topic.id}
-                href={`/topic/${topic.id}`}
-                className="block bg-white p-6 rounded-lg shadow hover:shadow-md transition"
+                href="/auth/signup"
+                className="rounded-lg border border-[#2c1810] px-4 py-2.5 text-sm font-medium hover:bg-[#faf8f4] transition-colors"
               >
-                <h3 className="text-lg font-medium text-gray-900">{topic.title}</h3>
-                <p className="text-gray-600 mt-1">{topic.description}</p>
-                <div className="mt-2 text-sm text-gray-500">
-                  {topic.vote_count || 0} votes • {new Date(topic.created_at).toLocaleDateString()}
-                </div>
+                Create anonymous account
               </Link>
-            ))
+            )}
+          </div>
+
+          {message && (
+            <p className="mt-4 text-sm text-[#4a2c1a] bg-[#faf8f4] border border-[#d4c4a8] rounded-lg px-4 py-3">
+              {message}
+            </p>
           )}
-        </div>
+
+          {showSuggest && session && (
+            <form onSubmit={handleSuggestTopic} className="mt-6 space-y-3 border-t border-[#d4c4a8] pt-6">
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Topic title"
+                className="w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 focus:outline-none focus:border-[#2c1810]"
+                required
+                minLength={5}
+              />
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Why should people debate this?"
+                rows={3}
+                className="w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 focus:outline-none focus:border-[#2c1810]"
+              />
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-lg bg-[#2c1810] text-[#f5f0e8] px-4 py-2 text-sm font-medium disabled:opacity-50"
+              >
+                {submitting ? 'Submitting...' : 'Send to admin'}
+              </button>
+            </form>
+          )}
+        </section>
+
+        <section className="mt-10">
+          <div className="flex items-end justify-between gap-4 mb-5">
+            <div>
+              <h3 className="text-xl font-semibold">Live topics</h3>
+              <p className="text-sm text-[#8b7355] mt-1">
+                Open any topic without signing in
+              </p>
+            </div>
+            <span className="text-sm text-[#8b7355]">{topics.length} topics</span>
+          </div>
+
+          {loading ? (
+            <div className="rounded-2xl border border-[#d4c4a8] bg-white p-10 text-center text-[#8b7355]">
+              Loading topics...
+            </div>
+          ) : topics.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-[#d4c4a8] bg-white/60 p-10 text-center text-[#8b7355]">
+              No approved topics yet.
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {topics.map((topic) => (
+                <Link
+                  key={topic.id}
+                  href={`/topic/${topic.id}`}
+                  className="group rounded-2xl border sp-card p-5 md:p-6 shadow-sm hover:shadow-md transition-all"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h4 className="text-lg font-semibold group-hover:text-[#4a2c1a]">
+                        {topic.title}
+                      </h4>
+                      {topic.description && (
+                        <p className="mt-2 text-[#4a2c1a] leading-relaxed">
+                          {topic.description}
+                        </p>
+                      )}
+                    </div>
+                    <span className="shrink-0 rounded-full bg-[#faf8f4] border border-[#d4c4a8] px-3 py-1 text-xs text-[#8b7355]">
+                      Open
+                    </span>
+                  </div>
+                  <div className="mt-4 flex items-center gap-4 text-xs text-[#8b7355]">
+                    <span>{topic.note_count || 0} notes</span>
+                    <span>{new Date(topic.created_at).toLocaleDateString()}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
     </div>
   )

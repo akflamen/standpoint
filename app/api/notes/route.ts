@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin, supabase } from '../../../lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { getSessionFromRequest } from '@/lib/session'
 
-// GET — public, returns all notes for a topic with vote counts
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -11,7 +11,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing topicId' }, { status: 400 })
     }
 
-    // Fetch notes with vote counts
     const { data: notes, error } = await supabase
       .from('notes')
       .select(`
@@ -20,25 +19,30 @@ export async function GET(req: NextRequest) {
         username,
         parent_note_id,
         created_at,
-        votes (vote_value)
+        votes (vote_value, vote_weight)
       `)
       .eq('topic_id', topicId)
       .order('created_at', { ascending: true })
 
     if (error) throw error
 
-    // Calculate vote score for each note
-    const notesWithScores = notes.map(note => ({
-      id: note.id,
-      content: note.content,
-      username: note.username,
-      parent_note_id: note.parent_note_id,
-      created_at: note.created_at,
-      score: (note.votes as { vote_value: number }[]).reduce(
-        (sum, v) => sum + v.vote_value, 0
-      ),
-      voteCount: (note.votes as { vote_value: number }[]).length,
-    }))
+    const notesWithScores = (notes ?? []).map((note) => {
+      const votes = (note.votes as { vote_value: number; vote_weight: number | null }[]) ?? []
+      const score = votes.reduce(
+        (sum, vote) => sum + vote.vote_value * Number(vote.vote_weight ?? 1),
+        0
+      )
+
+      return {
+        id: note.id,
+        content: note.content,
+        username: note.username,
+        parent_note_id: note.parent_note_id,
+        created_at: note.created_at,
+        score: Math.round(score * 100) / 100,
+        voteCount: votes.length,
+      }
+    })
 
     return NextResponse.json({ notes: notesWithScores })
   } catch (err) {
@@ -47,39 +51,30 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST — logged in users post a new note
 export async function POST(req: NextRequest) {
   try {
-    const { topicId, content, parentNoteId, token, username } = await req.json()
+    const session = await getSessionFromRequest(req)
+    if (!session) {
+      return NextResponse.json({ error: 'Sign in to post' }, { status: 401 })
+    }
 
-    if (!topicId || !content || !token || !username) {
+    const { topicId, content, parentNoteId } = await req.json()
+
+    if (!topicId || !content) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
 
     if (content.length > 1000) {
-      return NextResponse.json({ error: 'Note too long (max 1000 characters)' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Note too long (max 1000 characters)' },
+        { status: 400 }
+      )
     }
 
     if (content.trim().length < 1) {
       return NextResponse.json({ error: 'Note cannot be empty' }, { status: 400 })
     }
 
-    // Verify session token
-    const { data: session } = await supabaseAdmin
-      .from('login_challenges')
-      .select('username, expires_at')
-      .eq('challenge', `session_${token}`)
-      .single()
-
-    if (!session || session.username !== username) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-    }
-
-    if (new Date(session.expires_at) < new Date()) {
-      return NextResponse.json({ error: 'Session expired, please log in again' }, { status: 401 })
-    }
-
-    // Verify topic exists and is approved
     const { data: topic } = await supabaseAdmin
       .from('topics')
       .select('id')
@@ -91,18 +86,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Topic not found' }, { status: 404 })
     }
 
-    // Get account id
-    const { data: account } = await supabaseAdmin
-      .from('accounts')
-      .select('id')
-      .eq('username', username)
-      .single()
-
-    if (!account) {
-      return NextResponse.json({ error: 'Account not found' }, { status: 404 })
-    }
-
-    // If replying, verify parent note exists in same topic
     if (parentNoteId) {
       const { data: parentNote } = await supabaseAdmin
         .from('notes')
@@ -121,14 +104,19 @@ export async function POST(req: NextRequest) {
       .insert({
         topic_id: topicId,
         content: content.trim(),
-        username,
-        account_id: account.id,
+        username: session.username,
+        account_id: session.userId,
         parent_note_id: parentNoteId || null,
       })
       .select('id, content, username, parent_note_id, created_at')
       .single()
 
     if (error) throw error
+
+    await supabaseAdmin
+      .from('accounts')
+      .update({ last_topic_id: topicId })
+      .eq('id', session.userId)
 
     return NextResponse.json({ note: { ...note, score: 0, voteCount: 0 } })
   } catch (err) {

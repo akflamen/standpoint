@@ -1,19 +1,27 @@
-// lib/rate-limit.ts
-import { supabase } from './supabase'
+import { NextRequest } from 'next/server'
+import { supabaseAdmin } from './supabase'
 
 interface RateLimitOptions {
-  interval: number
-  uniqueTokenPerInterval: number
+  intervalMs: number
+  action: string
+}
+
+export function getRequestIp(req: NextRequest): string {
+  return (
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    req.headers.get('x-real-ip') ||
+    'anonymous'
+  )
 }
 
 export function rateLimit(options: RateLimitOptions) {
   return {
-    check: async (token: string, limit: number) => {
+    check: async (identifier: string, limit: number) => {
       const now = Date.now()
-      const windowStart = now - options.interval
+      const windowStart = now - options.intervalMs
+      const token = `${options.action}:${identifier}`
 
-      // Get count for this token in the time window
-      const { count, error } = await supabase
+      const { count, error } = await supabaseAdmin
         .from('rate_limits')
         .select('*', { count: 'exact', head: true })
         .eq('token', token)
@@ -21,7 +29,6 @@ export function rateLimit(options: RateLimitOptions) {
 
       if (error) {
         console.error('Rate limit error:', error)
-        // If table doesn't exist, allow the request
         return true
       }
 
@@ -29,15 +36,23 @@ export function rateLimit(options: RateLimitOptions) {
         throw new Error('Rate limit exceeded')
       }
 
-      // Add new entry
-      await supabase
-        .from('rate_limits')
-        .insert({
-          token,
-          timestamp: now,
-        })
+      await supabaseAdmin.from('rate_limits').insert({
+        token,
+        timestamp: now,
+      })
 
       return true
-    }
+    },
   }
+}
+
+export async function enforceRateLimit(
+  req: NextRequest,
+  action: string,
+  identifier: string,
+  limit: number,
+  intervalMs: number
+) {
+  const limiter = rateLimit({ action, intervalMs })
+  await limiter.check(identifier, limit)
 }

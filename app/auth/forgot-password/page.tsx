@@ -1,111 +1,188 @@
-"use client";
+'use client'
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+
+type Step = 'username' | 'phrase' | 'newPassword' | 'done'
 
 export default function ForgotPasswordPage() {
-  // Step tracker state
-  const [step, setStep] = useState<'username' | 'phrase' | 'newPassword'>('username');
-  
-  // Input fields state
-  const [username, setUsername] = useState('');
-  const [phrase, setPhrase] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const router = useRouter()
+  const [step, setStep] = useState<Step>('username')
+  const [username, setUsername] = useState('')
+  const [phrase, setPhrase] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  // Step 1: Handle Username submission
-  const handleUsernameSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!username.trim()) return;
-    
-    // Transition to security phrase phase
-    setStep('phrase');
-  };
+  const handlePasswordSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setError('')
 
-  // Step 2: Handle Decentralized Security Phrase verification
-  const handlePhraseSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!phrase.trim()) return;
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters')
+      return
+    }
 
-    // TODO: Add client-side cryptographic verification using your lib/crypto.ts
-    setStep('newPassword');
-  };
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
 
-  // Step 3: Handle Password Reset execution
-  const handlePasswordSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!newPassword.trim()) return;
+    setLoading(true)
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, phrase, newPassword }),
+      })
 
-    // TODO: Submit network request to rewrite credentials
-    console.log("Credentials securely updated for user:", username);
-  };
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Could not reset password')
+      }
+
+      setStep('done')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Could not reset password')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-slate-950 text-slate-100">
-      <div className="w-full max-w-md p-6 bg-slate-900 rounded-lg border border-slate-800 shadow-xl">
-        <h2 className="text-xl font-bold mb-4 text-center">Account Recovery</h2>
+    <div className="min-h-screen flex items-center justify-center bg-[#f5f0e8] px-4">
+      <div className="max-w-md w-full bg-white border border-[#d4c4a8] rounded-2xl shadow-lg p-8">
+        <h2 className="text-2xl font-bold text-[#2c1810] text-center">
+          Reset password
+        </h2>
 
-        {/* Step 1: Ask for username */}
+        {error && (
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         {step === 'username' && (
-          <form onSubmit={handleUsernameSubmit} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (!username.trim()) return
+              setStep('phrase')
+            }}
+            className="mt-6 space-y-4"
+          >
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-400">Username</label>
-              <input 
+              <label className="block text-sm font-medium text-[#4a2c1a]">Username</label>
+              <input
                 type="text"
-                placeholder="Enter your username" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md focus:outline-none focus:border-blue-500"
+                className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
                 required
               />
             </div>
-            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded-md transition-colors">
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-lg bg-[#2c1810] text-[#f5f0e8] font-medium hover:bg-[#4a2c1a] transition-colors"
+            >
               Continue
             </button>
           </form>
         )}
 
-        {/* Step 2: Ask for security phrase */}
         {step === 'phrase' && (
-          <form onSubmit={handlePhraseSubmit} className="space-y-4">
-            <p className="text-sm text-slate-400">
-              Enter the zero-knowledge security phrase you saved during registration to prove ownership.
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (!phrase.trim()) return
+              setStep('newPassword')
+            }}
+            className="mt-6 space-y-4"
+          >
+            <p className="text-sm text-[#8b7355]">
+              Enter the 12-word recovery phrase you saved when you signed up.
             </p>
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-400">Security Phrase</label>
-              <input 
-                type="password"
-                placeholder="Your security phrase" 
+              <label className="block text-sm font-medium text-[#4a2c1a]">
+                Recovery phrase
+              </label>
+              <textarea
                 value={phrase}
                 onChange={(e) => setPhrase(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md focus:outline-none focus:border-blue-500"
+                rows={3}
+                className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
                 required
               />
             </div>
-            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded-md transition-colors">
-              Verify Phrase
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-lg bg-[#2c1810] text-[#f5f0e8] font-medium hover:bg-[#4a2c1a] transition-colors"
+            >
+              Verify phrase
             </button>
           </form>
         )}
 
-        {/* Step 3: Set new password */}
         {step === 'newPassword' && (
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+          <form onSubmit={handlePasswordSubmit} className="mt-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-400">New Password</label>
-              <input 
+              <label className="block text-sm font-medium text-[#4a2c1a]">
+                New password
+              </label>
+              <input
                 type="password"
-                placeholder="Enter new password" 
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md focus:outline-none focus:border-blue-500"
+                className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
+                required
+                minLength={6}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#4a2c1a]">
+                Confirm password
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
                 required
               />
             </div>
-            <button type="submit" className="w-full bg-green-600 hover:bg-green-500 text-white font-medium py-2 rounded-md transition-colors">
-              Reset Password
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 rounded-lg bg-green-700 text-white font-medium disabled:opacity-50 hover:bg-green-800 transition-colors"
+            >
+              {loading ? 'Updating...' : 'Reset password'}
             </button>
           </form>
         )}
+
+        {step === 'done' && (
+          <div className="mt-6 text-center space-y-4">
+            <p className="text-sm text-[#4a2c1a]">
+              Your password has been updated. You can log in now.
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push('/auth/login')}
+              className="w-full py-2.5 rounded-lg bg-[#2c1810] text-[#f5f0e8] font-medium hover:bg-[#4a2c1a] transition-colors"
+            >
+              Go to login
+            </button>
+          </div>
+        )}
+
+        <p className="mt-6 text-center text-sm text-[#8b7355]">
+          <Link href="/auth/login" className="text-[#2c1810] hover:underline">
+            Back to login
+          </Link>
+        </p>
       </div>
     </div>
-  );
+  )
 }

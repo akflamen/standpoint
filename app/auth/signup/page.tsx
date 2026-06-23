@@ -3,132 +3,164 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-// Replace the old placeholder import with this:
-import { generateKeypair } from '@/lib/crypto'
+
+type Step = 'form' | 'phrase' | 'done'
 
 export default function SignupPage() {
   const router = useRouter()
+  const [step, setStep] = useState<Step>('form')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [recoveryPhrase, setRecoveryPhrase] = useState('')
+  const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError('')
 
-    // 1. Basic Validations
     if (password !== confirmPassword) {
       setError('Passwords do not match')
-      setLoading(false)
       return
     }
 
     if (password.length < 6) {
       setError('Password must be at least 6 characters')
-      setLoading(false)
       return
     }
 
+    setLoading(true)
     try {
-  // 2. Generate the keypair from your crypto engine
-  setLoading(true)
-  const { publicKeyBase64, privateKeyBase64 } = await generateKeypair()
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
 
-  // 3. Send the payload with the required publicKey to the backend
-  const response = await fetch('/api/auth/signup', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-      username, 
-      password, 
-      publicKey: publicKeyBase64 // This satisfies the backend requirement!
-    }),
-  })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Signup failed')
+      }
 
-  const data = await response.json()
-
-  if (!response.ok) {
-    throw new Error(data.error || 'Signup failed')
+      setRecoveryPhrase(data.recoveryPhrase)
+      setStep('phrase')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Signup failed')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // OPTIONAL: If you want to store the private key locally in the browser 
-  // so the user can sign things later without downloading it again:
-  // localStorage.setItem('standpoint_privkey', privateKeyBase64)
-
-  setSuccess(true)
-  setTimeout(() => {
-    router.push('/auth/login')
-  }, 3000)
-
-} catch (err: any) {
-  setError(err.message)
-} finally {
-  setLoading(false)
-}
+  const handleCopyPhrase = async () => {
+    await navigator.clipboard.writeText(recoveryPhrase)
+    setCopied(true)
   }
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <div>
-          <h2 className="text-3xl font-bold text-center text-gray-900">
-            Standpoint
+
+  if (step === 'phrase') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f0e8] px-4">
+        <div className="max-w-lg w-full bg-white border border-[#d4c4a8] rounded-2xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold text-[#2c1810] text-center">
+            Save your recovery phrase
           </h2>
-          <p className="mt-2 text-center text-gray-600">
-            Create your account
+          <p className="mt-3 text-sm text-[#8b7355] text-center leading-relaxed">
+            This 12-word phrase is the only way to reset your password. We never
+            store it in plain text and cannot show it again.
           </p>
+
+          <div className="mt-6 rounded-xl bg-[#faf8f4] border border-[#d4c4a8] p-5">
+            <p className="text-[#2c1810] font-mono text-sm leading-7 tracking-wide">
+              {recoveryPhrase}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCopyPhrase}
+            className="mt-4 w-full py-2.5 rounded-lg border border-[#2c1810] text-[#2c1810] text-sm font-medium hover:bg-[#f5f0e8] transition-colors"
+          >
+            {copied ? 'Copied to clipboard' : 'Copy phrase'}
+          </button>
+
+          <label className="mt-5 flex items-start gap-3 text-sm text-[#4a2c1a]">
+            <input
+              type="checkbox"
+              checked={copied}
+              onChange={(e) => setCopied(e.target.checked)}
+              className="mt-1"
+            />
+            <span>I have saved this phrase somewhere safe</span>
+          </label>
+
+          <button
+            type="button"
+            disabled={!copied}
+            onClick={() => router.push('/auth/login')}
+            className="mt-6 w-full py-2.5 rounded-lg bg-[#2c1810] text-[#f5f0e8] font-medium disabled:opacity-40 hover:bg-[#4a2c1a] transition-colors"
+          >
+            Continue to login
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#f5f0e8] px-4">
+      <div className="max-w-md w-full bg-white border border-[#d4c4a8] rounded-2xl shadow-lg p-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-[#2c1810]">Standpoint</h2>
+          <p className="mt-2 text-[#8b7355]">Create your anonymous account</p>
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSignup} className="mt-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-[#4a2c1a]">
               Username
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
               required
-              autoFocus
               minLength={3}
+              autoFocus
             />
-            <p className="text-xs text-gray-500 mt-1">Minimum 3 characters</p>
+            <p className="mt-1 text-xs text-[#8b7355]">3-20 characters, letters/numbers/_</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-[#4a2c1a]">
               Password
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
               required
               minLength={6}
             />
-            <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Confirm Password
+            <label className="block text-sm font-medium text-[#4a2c1a]">
+              Confirm password
             </label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
               required
             />
           </div>
@@ -136,23 +168,18 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-50 font-medium"
+            className="w-full py-2.5 rounded-lg bg-[#2c1810] text-[#f5f0e8] font-medium disabled:opacity-50 hover:bg-[#4a2c1a] transition-colors"
           >
-            {loading ? 'Generating Identity keys...' : 'Create Account'}
+            {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
-        <div className="text-center">
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link
-              href="/auth/login"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              Log in
-            </Link>
-          </p>
-        </div>
+        <p className="mt-6 text-center text-sm text-[#8b7355]">
+          Already have an account?{' '}
+          <Link href="/auth/login" className="text-[#2c1810] font-medium hover:underline">
+            Log in
+          </Link>
+        </p>
       </div>
     </div>
   )

@@ -16,6 +16,16 @@ export default function AdminPage() {
   const [topics, setTopics] = useState<Topic[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [banUsername, setBanUsername] = useState('')
+  const [banReason, setBanReason] = useState('')
+  const [banMessage, setBanMessage] = useState('')
+  const [banLoading, setBanLoading] = useState(false)
+  const [lookupUser, setLookupUser] = useState<{
+    username: string
+    banned: boolean
+    ban_reason: string | null
+    premium: boolean
+  } | null>(null)
 
   async function fetchTopics(s: string) {
     setLoading(true)
@@ -57,6 +67,48 @@ export default function AdminPage() {
       )
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Failed')
+    }
+  }
+
+  async function lookupBanUser() {
+    if (!banUsername.trim()) return
+    try {
+      const res = await fetch(
+        `/api/admin/ban?username=${encodeURIComponent(banUsername.trim())}`,
+        { headers: { 'x-admin-secret': secret } }
+      )
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setLookupUser(data.account)
+    } catch {
+      setLookupUser(null)
+    }
+  }
+
+  async function handleBanAction(action: 'ban' | 'unban') {
+    setBanLoading(true)
+    setBanMessage('')
+    try {
+      const res = await fetch('/api/admin/ban', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-secret': secret,
+        },
+        body: JSON.stringify({
+          username: banUsername,
+          action,
+          reason: banReason,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setBanMessage(data.message)
+      await lookupBanUser()
+    } catch (err: unknown) {
+      setBanMessage(err instanceof Error ? err.message : 'Ban action failed')
+    } finally {
+      setBanLoading(false)
     }
   }
 
@@ -194,6 +246,66 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        <div className="border-t border-[#d4c4a8] pt-6">
+          <h2 className="text-sm font-semibold text-[#2c1810] mb-3">
+            User moderation
+          </h2>
+          <div className="bg-white border border-[#d4c4a8] rounded-lg p-4 shadow-sm space-y-3">
+            <input
+              type="text"
+              value={banUsername}
+              onChange={(e) => setBanUsername(e.target.value)}
+              placeholder="Username to ban or unban"
+              className="w-full border border-[#d4c4a8] rounded px-3 py-2 text-sm bg-[#faf8f4] focus:outline-none focus:border-[#2c1810]"
+            />
+            <input
+              type="text"
+              value={banReason}
+              onChange={(e) => setBanReason(e.target.value)}
+              placeholder="Ban reason (optional)"
+              className="w-full border border-[#d4c4a8] rounded px-3 py-2 text-sm bg-[#faf8f4] focus:outline-none focus:border-[#2c1810]"
+            />
+
+            {lookupUser && (
+              <div className="rounded border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2 text-xs text-[#4a2c1a]">
+                <p>Status: {lookupUser.banned ? 'Banned' : 'Active'}</p>
+                {lookupUser.banned && lookupUser.ban_reason && (
+                  <p>Reason: {lookupUser.ban_reason}</p>
+                )}
+                <p>Premium: {lookupUser.premium ? 'Yes' : 'No'}</p>
+              </div>
+            )}
+
+            {banMessage && (
+              <p className="text-xs text-[#4a2c1a]">{banMessage}</p>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={lookupBanUser}
+                disabled={!banUsername.trim() || banLoading}
+                className="text-xs border border-[#2c1810] px-4 py-1.5 rounded hover:bg-[#faf8f4] transition-colors disabled:opacity-50"
+              >
+                Look up user
+              </button>
+              <button
+                onClick={() => handleBanAction('ban')}
+                disabled={!banUsername.trim() || banLoading}
+                className="text-xs bg-red-600 text-white px-4 py-1.5 rounded hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                Ban user
+              </button>
+              <button
+                onClick={() => handleBanAction('unban')}
+                disabled={!banUsername.trim() || banLoading}
+                className="text-xs bg-green-600 text-white px-4 py-1.5 rounded hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                Unban user
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   )
