@@ -17,8 +17,8 @@ export function getRequestIp(req: NextRequest): string {
 export function rateLimit(options: RateLimitOptions) {
   return {
     check: async (identifier: string, limit: number) => {
-      const now = Date.now()
-      const windowStart = now - options.intervalMs
+      const now = new Date().toISOString()
+      const windowStart = new Date(Date.now() - options.intervalMs).toISOString()
       const token = `${options.action}:${identifier}`
 
       const { count, error } = await supabaseAdmin
@@ -29,7 +29,7 @@ export function rateLimit(options: RateLimitOptions) {
 
       if (error) {
         console.error('Rate limit error:', error)
-        return true
+        throw error
       }
 
       if (count && count >= limit) {

@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
 
     const currentWeight = applyInactivityDecay(
-      Number(account.vote_weight ?? 0.3),
+      Number(account.vote_weight ?? 30),
       account.last_vote_at,
       Boolean(account.premium)
     )

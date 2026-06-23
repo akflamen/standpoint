@@ -1,13 +1,13 @@
 export const VOTE_WEIGHT = {
-  MIN: 0.25,
-  MAX: 1.0,
-  NEW_USER: 0.3,
-  PREMIUM_MIN: 0.35,
-  PREMIUM_NEW: 0.4,
-  VOTE_BOOST: 0.04,
-  PREMIUM_VOTE_BOOST: 0.06,
+  MIN: 25,
+  MAX: 100,
+  NEW_USER: 30,
+  PREMIUM_MIN: 35,
+  PREMIUM_NEW: 40,
+  VOTE_BOOST: 4,
+  PREMIUM_VOTE_BOOST: 6,
   GRACE_DAYS: 14,
-  DECAY_PER_DAY: 0.03,
+  DECAY_PER_DAY: 3,
 } as const
 
 export function applyInactivityDecay(
@@ -45,5 +45,5 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export function formatVoteWeight(weight: number) {
-  return `${Math.round(weight * 100)}%`
+  return `${weight}%`
 }
