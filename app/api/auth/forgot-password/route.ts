@@ -1,24 +1,26 @@
 // app/api/auth/forgot-password/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserByUsername, verifyPhrase, updateUserPassword } from '@/lib/auth'
-import { rateLimit } from '../../../../lib/rate-limit'
+import { supabaseAdmin } from '@/lib/supabase'
+import { hashPassword, verifyPhrase } from '@/lib/auth'
+import { rateLimit } from '@/lib/rate-limit'
 
 // Rate Limiting: 3 attempts per hour
 const limiter = rateLimit({
   intervalMs: 60 * 60 * 1000, // 1 hour
-  action: 'forgot-password',   // Added this to identify the action in Supabase
+  action: 'forgot-password',
 })
 
 export async function POST(req: NextRequest) {
   try {
-    // Get client IP from headers
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || 
-               req.headers.get('x-real-ip') || 
-               'anonymous'
+    // Get client IP
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0] ||
+      req.headers.get('x-real-ip') ||
+      'anonymous'
 
     // Apply rate limiting
     try {
-      await limiter.check(ip, 3) // 3 attempts max per hour
+      await limiter.check(ip, 3)
     } catch {
       return NextResponse.json(
         { error: 'Too many attempts. Please try again later.' },
@@ -32,7 +34,7 @@ export async function POST(req: NextRequest) {
     // Validate inputs
     if (!username || !normalizedPhrase || !newPassword) {
       return NextResponse.json(
-        { error: 'Username, security phrase, and new password are required' },
+        { error: 'Username, recovery phrase, and new password are required' },
         { status: 400 }
       )
     }
@@ -45,31 +47,47 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user by username
-    const user = await getUserByUsername(username)
+    const { data: user } = await supabaseAdmin
+      .from('accounts')
+      .select('id, phrase_hash')
+      .eq('username', username)
+      .single()
+
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid username or security phrase' },
+        { error: 'Invalid username or recovery phrase' },
         { status: 401 }
       )
     }
 
-    // Verify security phrase
+    // Verify recovery phrase
     const isValidPhrase = await verifyPhrase(normalizedPhrase, user.phrase_hash)
     if (!isValidPhrase) {
       return NextResponse.json(
-        { error: 'Invalid username or security phrase' },
+        { error: 'Invalid username or recovery phrase' },
         { status: 401 }
       )
     }
 
     // Update password
-    await updateUserPassword(user.id, newPassword)
+    const newHash = await hashPassword(newPassword)
+    const { error } = await supabaseAdmin
+      .from('accounts')
+      .update({ password_hash: newHash })
+      .eq('id', user.id)
+
+    if (error) {
+      console.error('Password update error:', error)
+      return NextResponse.json(
+        { error: 'Could not update password' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Password updated successfully'
+      message: 'Password updated successfully',
     })
-
   } catch (error) {
     console.error('Forgot password error:', error)
     return NextResponse.json(

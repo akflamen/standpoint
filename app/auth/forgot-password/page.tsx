@@ -4,17 +4,27 @@ import { useState, FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-type Step = 'username' | 'phrase' | 'newPassword' | 'done'
+type Step = 'credentials' | 'newPassword' | 'done'
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
-  const [step, setStep] = useState<Step>('username')
+  const [step, setStep] = useState<Step>('credentials')
   const [username, setUsername] = useState('')
   const [phrase, setPhrase] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const handleCredentialsSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    setError('')
+    if (!username.trim() || !phrase.trim()) {
+      setError('Username and recovery phrase are required')
+      return
+    }
+    setStep('newPassword')
+  }
 
   const handlePasswordSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -64,17 +74,12 @@ export default function ForgotPasswordPage() {
           </div>
         )}
 
-        {step === 'username' && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (!username.trim()) return
-              setStep('phrase')
-            }}
-            className="mt-6 space-y-4"
-          >
+        {step === 'credentials' && (
+          <form onSubmit={handleCredentialsSubmit} className="mt-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#4a2c1a]">Username</label>
+              <label className="block text-sm font-medium text-[#4a2c1a]">
+                Username
+              </label>
               <input
                 type="text"
                 value={username}
@@ -83,27 +88,6 @@ export default function ForgotPasswordPage() {
                 required
               />
             </div>
-            <button
-              type="submit"
-              className="w-full py-2.5 rounded-lg bg-[#2c1810] text-[#f5f0e8] font-medium hover:bg-[#4a2c1a] transition-colors"
-            >
-              Continue
-            </button>
-          </form>
-        )}
-
-        {step === 'phrase' && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (!phrase.trim()) return
-              setStep('newPassword')
-            }}
-            className="mt-6 space-y-4"
-          >
-            <p className="text-sm text-[#8b7355]">
-              Enter the 12-word recovery phrase you saved when you signed up.
-            </p>
             <div>
               <label className="block text-sm font-medium text-[#4a2c1a]">
                 Recovery phrase
@@ -120,7 +104,7 @@ export default function ForgotPasswordPage() {
               type="submit"
               className="w-full py-2.5 rounded-lg bg-[#2c1810] text-[#f5f0e8] font-medium hover:bg-[#4a2c1a] transition-colors"
             >
-              Verify phrase
+              Continue
             </button>
           </form>
         )}
