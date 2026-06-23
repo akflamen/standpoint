@@ -1,16 +1,16 @@
-// app/auth/signup/page.tsx
 'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+// Replace the old placeholder import with this:
+import { generateKeypair } from '@/lib/crypto'
 
 export default function SignupPage() {
   const router = useRouter()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [phrase, setPhrase] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -20,7 +20,7 @@ export default function SignupPage() {
     setLoading(true)
     setError('')
 
-    // Validate passwords match
+    // 1. Basic Validations
     if (password !== confirmPassword) {
       setError('Passwords do not match')
       setLoading(false)
@@ -33,59 +33,43 @@ export default function SignupPage() {
       return
     }
 
-    if (phrase.length < 3) {
-      setError('Security phrase must be at least 3 characters')
-      setLoading(false)
-      return
-    }
-
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, phrase }),
-      })
+  // 2. Generate the keypair from your crypto engine
+  setLoading(true)
+  const { publicKeyBase64, privateKeyBase64 } = await generateKeypair()
 
-      const data = await response.json()
+  // 3. Send the payload with the required publicKey to the backend
+  const response = await fetch('/api/auth/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      username, 
+      password, 
+      publicKey: publicKeyBase64 // This satisfies the backend requirement!
+    }),
+  })
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Signup failed')
-      }
+  const data = await response.json()
 
-      setSuccess(true)
-      setTimeout(() => {
-        router.push('/auth/login')
-      }, 3000)
-
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
+  if (!response.ok) {
+    throw new Error(data.error || 'Signup failed')
   }
 
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-          <h2 className="text-2xl font-bold text-center text-green-600">
-            ✓ Account Created!
-          </h2>
-          <p className="text-center text-gray-600">
-            Your account has been created successfully.
-            Redirecting to login...
-          </p>
-          <Link
-            href="/auth/login"
-            className="block text-center text-blue-600 hover:underline"
-          >
-            Go to Login
-          </Link>
-        </div>
-      </div>
-    )
-  }
+  // OPTIONAL: If you want to store the private key locally in the browser 
+  // so the user can sign things later without downloading it again:
+  // localStorage.setItem('standpoint_privkey', privateKeyBase64)
 
+  setSuccess(true)
+  setTimeout(() => {
+    router.push('/auth/login')
+  }, 3000)
+
+} catch (err: any) {
+  setError(err.message)
+} finally {
+  setLoading(false)
+}
+  }
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
@@ -113,7 +97,7 @@ export default function SignupPage() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               required
               autoFocus
               minLength={3}
@@ -129,7 +113,7 @@ export default function SignupPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               required
               minLength={6}
             />
@@ -144,36 +128,17 @@ export default function SignupPage() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               required
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Security Phrase
-            </label>
-            <input
-              type="text"
-              value={phrase}
-              onChange={(e) => setPhrase(e.target.value)}
-              placeholder="e.g., My favorite color is blue"
-              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-              minLength={3}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              This phrase will be used to reset your password if you forget it.
-              Keep it memorable but hard to guess.
-            </p>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-50"
+            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-50 font-medium"
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? 'Generating Identity keys...' : 'Create Account'}
           </button>
         </form>
 
@@ -186,9 +151,6 @@ export default function SignupPage() {
             >
               Log in
             </Link>
-          </p>
-          <p className="mt-2 text-xs text-gray-500">
-            No email or phone needed. Your username and password are all we ask for.
           </p>
         </div>
       </div>

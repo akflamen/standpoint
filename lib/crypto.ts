@@ -81,13 +81,13 @@ export async function deriveKeyFromPassword(password: string, salt: Uint8Array |
   )
 
   // Derive AES-GCM key using PBKDF2
-  // Ensure salt is a BufferSource (Uint8Array) to satisfy WebCrypto TS types
-  const saltBuffer = salt instanceof Uint8Array ? salt : new Uint8Array(salt as ArrayBuffer)
+  // Ensure salt is a BufferSource (use Uint8Array) to satisfy WebCrypto TS types
+  const saltBuffer = salt instanceof Uint8Array ? salt : new Uint8Array(salt)
 
   return window.crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: saltBuffer,
+      salt: saltBuffer as BufferSource, // ✅ Type assertion to satisfy WebCrypto types
       iterations: 250000,
       hash: 'SHA-256',
     },
