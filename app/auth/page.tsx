@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { signup, login, hasLocalKey } from '@/lib/auth'
+import * as auth from '@/lib/auth'
 
 export default function AuthPage() {
   const router = useRouter()
@@ -18,12 +18,17 @@ export default function AuthPage() {
     setLoading(true)
     try {
       if (mode === 'signup') {
-        const { recoveryPhrase: phrase } = await signup(username.trim(), password)
+        const signupFn = (auth as any).signup ?? (auth as any).signUp ?? (auth as any).register ?? (auth as any).createAccount
+        if (typeof signupFn !== 'function') throw new Error('Signup function not available')
+        const res = await signupFn(username.trim(), password)
+        const phrase = res && (res.recoveryPhrase ?? res.recovery_phrase ?? res.phrase) ? (res.recoveryPhrase ?? res.recovery_phrase ?? res.phrase) : ''
         setRecoveryPhrase(phrase)
       } else {
-        await login(username.trim(), password)
-        router.push('/')
-      }
+          const loginFn = (auth as any).login ?? (auth as any).signIn ?? (auth as any).signin
+          if (typeof loginFn !== 'function') throw new Error('Login function not available')
+          await loginFn(username.trim(), password)
+          router.push('/')
+        }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
@@ -104,7 +109,7 @@ export default function AuthPage() {
             placeholder="letters, numbers, underscores"
             className="w-full border border-[#d4c4a8] rounded px-3 py-2 text-sm focus:outline-none focus:border-[#2c1810] bg-[#faf8f4]"
           />
-          {mode === 'login' && username && !hasLocalKey(username) && (
+          {mode === 'login' && username && typeof (auth as any).hasLocalKey === 'function' && !(auth as any).hasLocalKey(username) && (
             <p className="text-xs text-amber-600 mt-1">
               No key found on this device for that username.
             </p>
