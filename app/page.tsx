@@ -84,42 +84,52 @@ export default function HomePage() {
 
   return (
     <div className="sp-page min-h-screen">
-      <header className="sp-header border-b border-(--sp-border)">
-        <div className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-[#c4a882]">
-              Anonymous debate
-            </p>
-            <h1 className="text-2xl md:text-3xl font-bold mt-1">Standpoint</h1>
+      {/* Modern Glassmorphic Header */}
+      <header className="sp-header border-b border-[var(--sp-border)]">
+        <div className="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--sp-accent)] to-[var(--sp-secondary)] flex items-center justify-center">
+              <span className="text-white font-bold text-lg">S</span>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-widest font-semibold text-[var(--sp-accent)]">
+                Standpoint
+              </p>
+              <p className="text-xs text-[var(--sp-text-muted)]">Anonymous Debate</p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-4 text-sm">
             {session ? (
               <>
                 <Link
                   href="/profile"
-                  className="hidden sm:inline text-[#f5f0e8] hover:text-[#c4a882] transition-colors"
+                  className="hidden sm:inline text-[var(--sp-text)] hover:text-[var(--sp-accent)] transition-colors font-medium"
                 >
                   {session.username}
-                  {session.premium ? ' · Premium' : ''}
+                  {session.premium && (
+                    <span className="ml-2 inline-block px-2 py-1 rounded-full bg-[var(--sp-highlight)] text-[var(--sp-accent-text)] text-xs font-semibold">
+                      Premium ⭐
+                    </span>
+                  )}
                 </Link>
                 {!session.premium && (
                   <Link
                     href="/premium"
-                    className="rounded-full bg-[#c4a882] text-[#2c1810] px-3 py-1.5 font-medium hover:bg-[#d4c4a8] transition-colors"
+                    className="sp-btn-premium px-4 py-2 rounded-lg text-xs font-semibold"
                   >
-                    Go Premium
+                    Upgrade
                   </Link>
                 )}
               </>
             ) : (
               <>
-                <Link href="/auth/login" className="hover:text-[#c4a882] transition-colors">
+                <Link href="/auth/login" className="text-[var(--sp-text)] hover:text-[var(--sp-accent)] transition-colors">
                   Log in
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="rounded-full bg-[#f5f0e8] text-[#2c1810] px-3 py-1.5 font-medium hover:bg-[#d4c4a8] transition-colors"
+                  className="sp-btn-primary px-4 py-2 rounded-lg text-xs font-semibold"
                 >
                   Sign up
                 </Link>
@@ -129,93 +139,126 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-10">
-        <section className="rounded-2xl border sp-card p-6 md:p-8 shadow-sm">
-          <h2 className="text-3xl md:text-4xl font-bold leading-tight">
-            Real ideas. No identity.
-          </h2>
-          <p className="mt-3 max-w-2xl sp-body leading-relaxed">
-            Browse every topic without an account. Sign in only when you want to
-            write, vote, or suggest a new debate for admin approval.
-          </p>
+      <main className="max-w-6xl mx-auto px-4 py-12">
+        {/* Premium Hero Section */}
+        <section className="rounded-2xl border border-[var(--sp-border)] bg-gradient-to-br from-[var(--sp-card)] to-[var(--sp-bg-soft)] p-8 md:p-12 mb-12 shadow-lg overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--sp-accent)]/5 to-transparent pointer-events-none" />
+          
+          <div className="relative z-10">
+            <h2 className="text-4xl md:text-5xl font-bold leading-tight text-gradient mb-4">
+              Real ideas. Pure anonymity.
+            </h2>
+            <p className="mt-4 max-w-2xl text-lg text-[var(--sp-text-body)] leading-relaxed">
+              Debate ideas without revealing your identity. Browse thousands of topics, cast weighted votes, and share your standpoint on anything that matters.
+            </p>
 
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                if (!session) {
-                  setMessage('Sign in to suggest a topic.')
-                  return
-                }
-                setShowSuggest((value) => !value)
-              }}
-              className="rounded-lg bg-[#2c1810] text-[#f5f0e8] px-4 py-2.5 text-sm font-medium hover:bg-[#4a2c1a] transition-colors"
-            >
-              Suggest a topic
-            </button>
-            {!session && (
-              <Link
-                href="/auth/signup"
-                className="rounded-lg border border-[#2c1810] px-4 py-2.5 text-sm font-medium hover:bg-[#faf8f4] transition-colors"
+            <div className="mt-8 flex flex-wrap gap-4">
+              {!session && (
+                <Link
+                  href="/auth/signup"
+                  className="sp-btn-primary px-6 py-3 rounded-lg font-semibold text-base hover:shadow-lg transition-all"
+                >
+                  Create Account
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!session) {
+                    setMessage('Sign in to suggest a topic.')
+                    return
+                  }
+                  setShowSuggest((v) => !v)
+                }}
+                className="sp-btn-secondary px-6 py-3 rounded-lg font-semibold text-base"
               >
-                Create anonymous account
-              </Link>
+                Suggest Topic
+              </button>
+            </div>
+
+            {message && (
+              <div className="mt-6 alert-info">
+                {message}
+              </div>
             )}
           </div>
-
-          {message && (
-            <p className="mt-4 text-sm text-[#4a2c1a] bg-[#faf8f4] border border-[#d4c4a8] rounded-lg px-4 py-3">
-              {message}
-            </p>
-          )}
-
-          {showSuggest && session && (
-            <form onSubmit={handleSuggestTopic} className="mt-6 space-y-3 border-t border-[#d4c4a8] pt-6">
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Topic title"
-                className="w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 focus:outline-none focus:border-[#2c1810]"
-                required
-                minLength={5}
-              />
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Why should people debate this?"
-                rows={3}
-                className="w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 focus:outline-none focus:border-[#2c1810]"
-              />
-              <button
-                type="submit"
-                disabled={submitting}
-                className="rounded-lg bg-[#2c1810] text-[#f5f0e8] px-4 py-2 text-sm font-medium disabled:opacity-50"
-              >
-                {submitting ? 'Submitting...' : 'Send to admin'}
-              </button>
-            </form>
-          )}
         </section>
 
-        <section className="mt-10">
-          <div className="flex items-end justify-between gap-4 mb-5">
-            <div>
-              <h3 className="text-xl font-semibold">Live topics</h3>
-              <p className="text-sm text-[#8b7355] mt-1">
-                Open any topic without signing in
-              </p>
+        {/* Suggest Topic Form - Smooth Slide Down */}
+        {showSuggest && session && (
+          <section className="rounded-2xl border border-[var(--sp-border)] bg-[var(--sp-card)] p-8 mb-8 shadow-lg animate-in fade-in slide-in-from-top-4 duration-300">
+            <h3 className="text-xl font-bold mb-6">Propose a new debate topic</h3>
+            <form onSubmit={handleSuggestTopic} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-[var(--sp-text)] mb-2">
+                  Topic Title
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="What should people debate?"
+                  className="w-full sp-input sp-input-glow rounded-lg px-4 py-3"
+                  required
+                  minLength={5}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[var(--sp-text)] mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Why should people debate this topic?"
+                  rows={3}
+                  className="w-full sp-input sp-input-glow rounded-lg px-4 py-3"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="sp-btn-primary px-6 py-2.5 rounded-lg font-semibold text-sm disabled:opacity-50"
+                >
+                  {submitting ? 'Submitting...' : 'Send to Admin Review'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSuggest(false)}
+                  className="px-6 py-2.5 rounded-lg border border-[var(--sp-border)] font-semibold text-sm hover:bg-[var(--sp-bg-soft)] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </section>
+        )}
+
+        {/* Live Topics Section */}
+        <section>
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="pulse-dot" />
+              <div>
+                <h3 className="text-2xl font-bold">Live Topics</h3>
+                <p className="text-sm text-[var(--sp-text-muted)]">
+                  Active debates happening now
+                </p>
+              </div>
             </div>
-            <span className="text-sm text-[#8b7355]">{topics.length} topics</span>
+            <span className="text-sm font-semibold bg-[var(--sp-bg-soft)] text-[var(--sp-text)] px-4 py-2 rounded-full">
+              {topics.length} topics
+            </span>
           </div>
 
           {loading ? (
-            <div className="rounded-2xl border border-[#d4c4a8] bg-white p-10 text-center text-[#8b7355]">
+            <div className="rounded-2xl border border-[var(--sp-border)] bg-[var(--sp-card)] p-12 text-center text-[var(--sp-text-muted)]">
               Loading topics...
             </div>
           ) : topics.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[#d4c4a8] bg-white/60 p-10 text-center text-[#8b7355]">
-              No approved topics yet.
+            <div className="rounded-2xl border-2 border-dashed border-[var(--sp-border)] bg-[var(--sp-bg-soft)] p-12 text-center text-[var(--sp-text-muted)]">
+              No approved topics yet. Be the first to suggest one!
             </div>
           ) : (
             <div className="grid gap-4">
@@ -223,26 +266,30 @@ export default function HomePage() {
                 <Link
                   key={topic.id}
                   href={`/topic/${topic.id}`}
-                  className="group rounded-2xl border sp-card p-5 md:p-6 shadow-sm hover:shadow-md transition-all"
+                  className="group rounded-xl border border-[var(--sp-border)] bg-[var(--sp-card)] p-5 hover:border-[var(--sp-accent)]/50 hover:shadow-lg hover:-translate-y-1 transition-all"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h4 className="text-lg font-semibold group-hover:text-[#4a2c1a]">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-lg font-semibold text-[var(--sp-text)] group-hover:text-[var(--sp-accent)] transition-colors">
                         {topic.title}
                       </h4>
                       {topic.description && (
-                        <p className="mt-2 text-[#4a2c1a] leading-relaxed">
+                        <p className="mt-2 text-[var(--sp-text-body)] line-clamp-2">
                           {topic.description}
                         </p>
                       )}
                     </div>
-                    <span className="shrink-0 rounded-full bg-[#faf8f4] border border-[#d4c4a8] px-3 py-1 text-xs text-[#8b7355]">
-                      Open
+                    <span className="shrink-0 inline-block px-3 py-1.5 rounded-lg bg-[var(--sp-accent)]/10 text-[var(--sp-accent)] text-xs font-semibold">
+                      Active
                     </span>
                   </div>
-                  <div className="mt-4 flex items-center gap-4 text-xs text-[#8b7355]">
-                    <span>{topic.note_count || 0} notes</span>
-                    <span>{new Date(topic.created_at).toLocaleDateString()}</span>
+                  <div className="mt-4 flex items-center gap-4 text-xs text-[var(--sp-text-muted)]">
+                    <span className="flex items-center gap-1">
+                      💬 {topic.note_count || 0} standpoints
+                    </span>
+                    <span>
+                      📅 {new Date(topic.created_at).toLocaleDateString()}
+                    </span>
                   </div>
                 </Link>
               ))}

@@ -106,100 +106,173 @@ export default function TopicPage() {
 
   return (
     <div className="sp-page min-h-screen">
-      <header className="sp-header border-b border-(--sp-border)">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-sm hover:text-[#c4a882] transition-colors">
-            ← Back to topics
+      {/* Header */}
+      <header className="sp-header border-b border-[var(--sp-border)]">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Link 
+            href="/" 
+            className="text-sm font-medium text-[var(--sp-text)] hover:text-[var(--sp-accent)] transition-colors flex items-center gap-2"
+          >
+            ← Back to debates
           </Link>
           {session ? (
-            <span className="text-sm">{session.username}</span>
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline text-sm text-[var(--sp-text-muted)]">@</span>
+              <span className="text-sm font-semibold text-[var(--sp-text)]">{session.username}</span>
+            </div>
           ) : (
-            <Link href="/auth/login" className="text-sm hover:text-[#c4a882]">
-              Sign in to write
+            <Link 
+              href="/auth/login" 
+              className="text-sm font-medium text-[var(--sp-accent)] hover:underline"
+            >
+              Sign in to post
             </Link>
           )}
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-4 py-8">
         {loading ? (
-          <p className="text-[#8b7355]">Loading discussion...</p>
+          <div className="flex items-center justify-center py-12 text-[var(--sp-text-muted)]">
+            Loading debate thread...
+          </div>
         ) : (
           <>
-            <div className="rounded-2xl border border-[#d4c4a8] bg-white p-5 mb-6">
-              {session ? (
-                <form onSubmit={handlePost} className="space-y-3">
-                  <textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="Share your standpoint..."
-                    rows={4}
-                    className="w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 focus:outline-none focus:border-[#2c1810]"
-                    maxLength={1000}
-                  />
-                  {error && <p className="text-sm text-red-600">{error}</p>}
+            {/* Post Form */}
+            {session && (
+              <section className="rounded-2xl border border-[var(--sp-border)] bg-[var(--sp-card)] p-6 mb-8 shadow-md">
+                <h3 className="text-lg font-bold text-[var(--sp-text)] mb-4">Share Your Standpoint</h3>
+                <form onSubmit={handlePost} className="space-y-4">
+                  <div>
+                    <textarea
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      placeholder="What's your perspective on this topic?"
+                      rows={4}
+                      className="w-full sp-input sp-input-glow rounded-lg px-4 py-3 resize-none"
+                      maxLength={1000}
+                    />
+                    <div className="mt-2 flex items-center justify-between text-xs text-[var(--sp-text-muted)]">
+                      <span>{content.length} / 1000 characters</span>
+                    </div>
+                  </div>
+                  {error && (
+                    <div className="alert-info">
+                      {error}
+                    </div>
+                  )}
                   <button
                     type="submit"
-                    disabled={posting}
-                    className="rounded-lg bg-[#2c1810] text-[#f5f0e8] px-4 py-2 text-sm font-medium disabled:opacity-50"
+                    disabled={posting || !content.trim()}
+                    className="sp-btn-primary px-6 py-2.5 rounded-lg font-semibold text-sm disabled:opacity-50"
                   >
-                    {posting ? 'Posting...' : 'Post note'}
+                    {posting ? 'Posting...' : 'Post Standpoint'}
                   </button>
                 </form>
-              ) : (
-                <p className="text-sm text-[#4a2c1a]">
-                  You can read this topic without signing in.{' '}
-                  <Link href="/auth/login" className="font-medium underline">
-                    Log in
-                  </Link>{' '}
-                  to post or vote.
-                </p>
-              )}
-            </div>
+              </section>
+            )}
 
-            <div className="space-y-3">
+            {!session && (
+              <div className="alert-info mb-8">
+                You can read this debate without an account.{' '}
+                <Link href="/auth/login" className="font-semibold underline hover:no-underline">
+                  Sign in
+                </Link>{' '}
+                to post or vote on standpoints.
+              </div>
+            )}
+
+            {/* Standpoints Thread */}
+            <section>
+              <h2 className="text-2xl font-bold text-[var(--sp-text)] mb-6">
+                Standpoints ({notes.length})
+              </h2>
+
               {notes.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-[#d4c4a8] bg-white/70 p-8 text-center text-[#8b7355]">
-                  No notes yet. Be the first to write.
+                <div className="rounded-2xl border-2 border-dashed border-[var(--sp-border)] bg-[var(--sp-bg-soft)] p-12 text-center text-[var(--sp-text-muted)]">
+                  <p className="text-lg font-medium">No standpoints yet</p>
+                  <p className="text-sm mt-1">
+                    {session ? 'Be the first to share your perspective.' : 'Sign in to be the first to contribute.'}
+                  </p>
                 </div>
               ) : (
-                notes.map((note) => (
-                  <article
-                    key={note.id}
-                    className="rounded-2xl border border-[#d4c4a8] bg-white p-5"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-[#8b7355]">
-                          {note.username}
-                        </p>
-                        <p className="mt-2 leading-relaxed">{note.content}</p>
-                        <p className="mt-2 text-xs text-[#8b7355]">
-                          {new Date(note.created_at).toLocaleString()}
-                        </p>
+                <div className="space-y-4">
+                  {notes.map((note) => (
+                    <article
+                      key={note.id}
+                      className="rounded-xl border border-[var(--sp-border)] bg-[var(--sp-card)] p-6 hover:border-[var(--sp-accent)]/30 hover:shadow-md transition-all"
+                    >
+                      <div className="flex gap-5">
+                        {/* Voting Column */}
+                        <div className="flex flex-col items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleVote(note.id, 1)}
+                            disabled={!session}
+                            className="group relative p-2 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={session ? 'Upvote' : 'Sign in to vote'}
+                          >
+                            <svg
+                              className="w-5 h-5 text-[var(--sp-text-muted)] group-hover:text-green-600 group-active:scale-90 transition-all"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M2 10.5a1.5 1.5 0 113 0v-7a1.5 1.5 0 01-3 0v7zM14.98 4.374c.47 1.45 1.02 3.742 1.02 6.126 0 1.657-.327 3.207-.986 4.585A4.5 4.5 0 1113.5 3.5c.823.023 1.626.088 2.48.177z" />
+                            </svg>
+                          </button>
+
+                          <span className="text-sm font-bold text-[var(--sp-text)] min-w-[2rem] text-center">
+                            {note.score}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => handleVote(note.id, -1)}
+                            disabled={!session}
+                            className="group relative p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={session ? 'Downvote' : 'Sign in to vote'}
+                          >
+                            <svg
+                              className="w-5 h-5 text-[var(--sp-text-muted)] group-hover:text-red-600 group-active:scale-90 transition-all"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M2 10.5a1.5 1.5 0 113 0v7a1.5 1.5 0 01-3 0v-7zM14.98 15.626c.47-1.45 1.02-3.742 1.02-6.126 0-1.657-.327-3.207-.986-4.585A4.5 4.5 0 1113.5 16.5c.823-.023 1.626-.088 2.48-.177z" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {/* Content Column */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--sp-accent)] to-[var(--sp-secondary)] opacity-60 flex items-center justify-center text-white text-xs font-bold">
+                              {note.username.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-[var(--sp-text)]">
+                                {note.username}
+                              </p>
+                              <p className="text-xs text-[var(--sp-text-muted)]">
+                                {new Date(note.created_at).toLocaleDateString(undefined, {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                          </div>
+
+                          <p className="mt-4 text-[var(--sp-text-body)] leading-relaxed whitespace-pre-wrap">
+                            {note.content}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex flex-col items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleVote(note.id, 1)}
-                          className="text-sm hover:text-green-700"
-                        >
-                          ▲
-                        </button>
-                        <span className="text-sm font-semibold">{note.score}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleVote(note.id, -1)}
-                          className="text-sm hover:text-red-700"
-                        >
-                          ▼
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))
+                    </article>
+                  ))}
+                </div>
               )}
-            </div>
+            </section>
           </>
         )}
       </main>

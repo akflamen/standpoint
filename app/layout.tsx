@@ -30,7 +30,7 @@ export default function RootLayout({
       data-theme="light"
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-[var(--sp-bg)] text-[var(--sp-text)] transition-colors duration-300">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

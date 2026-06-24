@@ -39,88 +39,176 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="sp-page min-h-screen flex items-center justify-center sp-muted">
-        Loading profile...
+      <div className="sp-page min-h-screen flex items-center justify-center">
+        <p className="text-[var(--sp-text-muted)]">Loading profile...</p>
       </div>
     )
   }
 
   if (!profile) return null
 
+  // Calculate influence percentage (0-100)
+  const influencePercent = Math.min(Math.max((profile.voteWeight / 10) * 100, 0), 100)
+
   return (
     <div className="sp-page min-h-screen px-4 py-10">
-      <div className="max-w-xl mx-auto sp-card border rounded-2xl p-8 shadow-sm">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] sp-muted">Profile</p>
-            <h1 className="mt-2 text-2xl font-bold">{profile.username}</h1>
+      <div className="max-w-2xl mx-auto">
+        {/* Header Card */}
+        <div className="rounded-2xl border border-[var(--sp-border)] bg-gradient-to-br from-[var(--sp-card)] to-[var(--sp-bg-soft)] p-8 mb-8 shadow-lg">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-xs uppercase tracking-widest font-semibold text-[var(--sp-accent)]">
+                Account Profile
+              </p>
+              <h1 className="mt-3 text-3xl font-bold text-[var(--sp-text)]">
+                @{profile.username}
+              </h1>
+              <p className="mt-2 text-[var(--sp-text-body)]">
+                Your anonymous identity is secure. Only your username is visible in debates.
+              </p>
+            </div>
+            {profile.premium && (
+              <div className="shrink-0 rounded-xl bg-gradient-to-br from-[var(--sp-highlight)] to-amber-600 px-4 py-3 text-white text-center">
+                <p className="text-xs font-semibold">✨ Premium</p>
+                <p className="text-xs mt-1 opacity-90">Subscriber</p>
+              </div>
+            )}
           </div>
-          {profile.premium && (
-            <span className="rounded-full px-3 py-1 text-xs font-medium bg-[var(--sp-highlight)] text-[var(--sp-accent-text)]">
-              Premium
-            </span>
-          )}
         </div>
 
-        <p className="mt-3 text-sm sp-body">
-          Anonymous by design. Only your username appears in debates.
-        </p>
+        {/* Main Content Grid */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Vote Influence Card - Premium Styling */}
+          <div className="rounded-2xl border border-[var(--sp-border)] bg-[var(--sp-card)] p-6 shadow-md hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm uppercase tracking-wider font-bold text-[var(--sp-accent)]">
+                Vote Influence
+              </h3>
+              <span className="text-xs font-semibold px-2 py-1 rounded-lg bg-[var(--sp-accent)]/10 text-[var(--sp-accent)]">
+                {profile.voteWeightLabel}
+              </span>
+            </div>
 
-        <div className="mt-8 space-y-5">
-          <div className="rounded-xl border sp-card p-4">
-            <p className="text-xs uppercase tracking-wide sp-muted">Vote influence</p>
-            <p className="mt-1 text-lg font-semibold">{profile.voteWeightLabel}</p>
-            <p className="mt-2 text-sm sp-body leading-relaxed">
-              New accounts start lower. Your influence grows when you vote regularly
-              and slowly fades if you stay away for a long time.
+            <p className="text-3xl font-bold text-[var(--sp-text)] mb-4">
+              {(profile.voteWeight * 10).toFixed(0)}%
+            </p>
+
+            {/* Visual Progress Bar */}
+            <div className="mb-6">
+              <div className="h-3 rounded-full bg-[var(--sp-bg-soft)] overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[var(--sp-accent)] to-[var(--sp-secondary)] transition-all duration-500"
+                  style={{ width: `${influencePercent}%` }}
+                />
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-[var(--sp-text-muted)]">
+                <span>Low</span>
+                <span className="text-center">Moderate</span>
+                <span className="text-right">High</span>
+              </div>
+            </div>
+
+            <p className="text-sm text-[var(--sp-text-body)] leading-relaxed">
+              Your vote influence grows as you engage regularly with debates. Inactive accounts gradually lose influence over time.
             </p>
           </div>
 
-          <div className="rounded-xl border sp-card p-4">
-            <p className="text-xs uppercase tracking-wide sp-muted">Last topic seen</p>
+          {/* Last Topic Visited Card */}
+          <div className="rounded-2xl border border-[var(--sp-border)] bg-[var(--sp-card)] p-6 shadow-md hover:shadow-lg transition-shadow">
+            <h3 className="text-sm uppercase tracking-wider font-bold text-[var(--sp-accent)] mb-4">
+              Last Topic
+            </h3>
+
             {profile.lastTopic ? (
-              <Link
-                href={`/topic/${profile.lastTopic.id}`}
-                className="mt-2 inline-block text-base font-medium hover:underline"
-              >
-                {profile.lastTopic.title}
-              </Link>
+              <>
+                <Link
+                  href={`/topic/${profile.lastTopic.id}`}
+                  className="block group"
+                >
+                  <p className="text-2xl font-bold text-[var(--sp-text)] group-hover:text-[var(--sp-accent)] transition-colors line-clamp-2">
+                    {profile.lastTopic.title}
+                  </p>
+                </Link>
+                <div className="mt-4 flex gap-2">
+                  <Link
+                    href={`/topic/${profile.lastTopic.id}`}
+                    className="sp-btn-primary px-4 py-2 rounded-lg text-sm font-semibold"
+                  >
+                    Continue Reading
+                  </Link>
+                </div>
+              </>
             ) : (
-              <p className="mt-2 text-sm sp-muted">No topic visited yet</p>
+              <div className="text-center py-6">
+                <p className="text-[var(--sp-text-muted)] mb-4">
+                  You haven't visited any topics yet
+                </p>
+                <Link
+                  href="/"
+                  className="sp-btn-primary px-4 py-2 rounded-lg text-sm font-semibold inline-block"
+                >
+                  Browse Topics
+                </Link>
+              </div>
             )}
           </div>
 
-          <div className="rounded-xl border sp-card p-4 flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-wide sp-muted">Appearance</p>
-              <p className="mt-1 text-sm sp-body">
-                {theme === 'dark' ? 'Dark mode' : 'Light mode'}
-              </p>
+          {/* Theme Toggle Card */}
+          <div className="rounded-2xl border border-[var(--sp-border)] bg-[var(--sp-card)] p-6 shadow-md hover:shadow-lg transition-shadow">
+            <h3 className="text-sm uppercase tracking-wider font-bold text-[var(--sp-accent)] mb-4">
+              Appearance
+            </h3>
+
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-lg font-semibold text-[var(--sp-text)]">
+                {theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+              </span>
             </div>
+
             <button
               type="button"
               onClick={toggleTheme}
-              className="rounded-lg border px-4 py-2 text-sm font-medium sp-input hover:opacity-90 transition-opacity"
+              className="w-full sp-btn-secondary px-4 py-2.5 rounded-lg font-semibold text-sm"
             >
-              Toggle theme
+              Switch to {theme === 'dark' ? 'Light' : 'Dark'} Mode
             </button>
+          </div>
+
+          {/* Premium/Subscription Card */}
+          <div className="rounded-2xl border border-[var(--sp-border)] bg-[var(--sp-card)] p-6 shadow-md hover:shadow-lg transition-shadow">
+            <h3 className="text-sm uppercase tracking-wider font-bold text-[var(--sp-accent)] mb-4">
+              Subscription
+            </h3>
+
+            <div className="mb-4">
+              <p className="text-lg font-bold text-[var(--sp-text)]">
+                {profile.premium ? '✨ Premium Active' : 'Free Tier'}
+              </p>
+              <p className="text-sm text-[var(--sp-text-muted)] mt-1">
+                {profile.premium 
+                  ? 'Thank you for supporting Standpoint!' 
+                  : 'Unlock premium features'}
+              </p>
+            </div>
+
+            {!profile.premium && (
+              <Link
+                href="/premium"
+                className="sp-btn-premium w-full px-4 py-2.5 rounded-lg font-semibold text-sm text-center block"
+              >
+                Upgrade to Premium
+              </Link>
+            )}
           </div>
         </div>
 
+        {/* Actions */}
         <div className="mt-8 flex flex-wrap gap-3">
-          {!profile.premium && (
-            <Link
-              href="/premium"
-              className="rounded-lg sp-btn-primary px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity"
-            >
-              Upgrade to Premium
-            </Link>
-          )}
           <Link
             href="/"
-            className="rounded-lg border px-4 py-2 text-sm font-medium sp-input hover:opacity-90 transition-opacity"
+            className="sp-btn-secondary px-6 py-2.5 rounded-lg font-semibold text-sm"
           >
-            Back home
+            ← Back to Debates
           </Link>
           <button
             type="button"
@@ -129,9 +217,9 @@ export default function ProfilePage() {
               router.push('/auth/login')
               router.refresh()
             }}
-            className="rounded-lg border border-red-300 text-red-600 px-4 py-2 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            className="px-6 py-2.5 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-semibold text-sm hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
           >
-            Logout
+            Log Out
           </button>
         </div>
       </div>

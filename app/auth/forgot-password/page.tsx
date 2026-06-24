@@ -78,116 +78,156 @@ export default function ForgotPasswordPage() {
 
       setStep('done')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Could not reset password')
+      setError(err instanceof Error ? err.message : 'Password reset failed')
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f5f0e8] px-4">
-      <div className="max-w-md w-full bg-white border border-[#d4c4a8] rounded-2xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-[#2c1810] text-center">
-          Reset password
-        </h2>
+  if (step === 'done') {
+    return (
+      <div className="sp-page min-h-screen flex items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md rounded-2xl border border-[var(--sp-border)] bg-[var(--sp-card)] p-8 md:p-10 shadow-xl text-center">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-xl">✓</span>
+          </div>
+          <h2 className="text-3xl font-bold text-[var(--sp-text)]">Password Reset</h2>
+          <p className="mt-3 text-[var(--sp-text-body)]">
+            Your password has been successfully reset. You can now log in with your new password.
+          </p>
 
+          <Link
+            href="/auth/login"
+            className="mt-6 w-full sp-btn-primary py-3 rounded-lg font-semibold text-base inline-block"
+          >
+            Return to Login
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="sp-page min-h-screen flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md rounded-2xl border border-[var(--sp-border)] bg-[var(--sp-card)] p-8 md:p-10 shadow-xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-xl">🔑</span>
+          </div>
+          <h2 className="text-3xl font-bold text-[var(--sp-text)]">
+            {step === 'credentials' ? 'Reset Password' : 'New Password'}
+          </h2>
+          <p className="mt-2 text-[var(--sp-text-muted)]">
+            {step === 'credentials'
+              ? 'Enter your username and recovery phrase'
+              : 'Create a new password for your account'}
+          </p>
+        </div>
+
+        {/* Step Indicator */}
+        <div className="flex gap-2 mb-6">
+          <div className={`flex-1 h-2 rounded-full ${step === 'credentials' ? 'bg-[var(--sp-accent)]' : 'bg-[var(--sp-bg-soft)]'}`} />
+          <div className={`flex-1 h-2 rounded-full ${step === 'newPassword' ? 'bg-[var(--sp-accent)]' : 'bg-[var(--sp-bg-soft)]'}`} />
+        </div>
+
+        {/* Error Alert */}
         {error && (
-          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-6 rounded-lg border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/20 px-4 py-3 text-sm text-red-700 dark:text-red-300">
             {error}
           </div>
         )}
 
+        {/* Step 1: Credentials */}
         {step === 'credentials' && (
-          <form onSubmit={handleCredentialsSubmit} className="mt-6 space-y-4">
+          <form onSubmit={handleCredentialsSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#4a2c1a]">
+              <label className="block text-sm font-semibold text-[var(--sp-text)] mb-2">
                 Username
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
+                className="w-full sp-input sp-input-glow rounded-lg px-4 py-3"
+                placeholder="your_username"
                 required
+                autoFocus
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-[#4a2c1a]">
-                Recovery phrase
+              <label className="block text-sm font-semibold text-[var(--sp-text)] mb-2">
+                Recovery Phrase
               </label>
               <textarea
                 value={phrase}
                 onChange={(e) => setPhrase(e.target.value)}
+                className="w-full sp-input sp-input-glow rounded-lg px-4 py-3 font-mono text-sm resize-none"
+                placeholder="Paste your 12-word recovery phrase..."
                 rows={3}
-                className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
                 required
               />
             </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-[#2c1810] text-[#f5f0e8] font-medium hover:bg-[#4a2c1a] transition-colors"
+              className="w-full sp-btn-primary py-3 rounded-lg font-semibold text-base disabled:opacity-50 mt-6"
             >
-              {loading ? 'Checking...' : 'Continue'}
+              {loading ? 'Verifying...' : 'Verify Recovery Phrase'}
             </button>
           </form>
         )}
 
+        {/* Step 2: New Password */}
         {step === 'newPassword' && (
-          <form onSubmit={handlePasswordSubmit} className="mt-6 space-y-4">
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#4a2c1a]">
-                New password
+              <label className="block text-sm font-semibold text-[var(--sp-text)] mb-2">
+                New Password
               </label>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
+                className="w-full sp-input sp-input-glow rounded-lg px-4 py-3"
+                placeholder="••••••••"
                 required
                 minLength={6}
+                autoFocus
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-[#4a2c1a]">
-                Confirm password
+              <label className="block text-sm font-semibold text-[var(--sp-text)] mb-2">
+                Confirm Password
               </label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-[#d4c4a8] bg-[#faf8f4] px-3 py-2.5 text-[#2c1810] focus:outline-none focus:border-[#2c1810]"
+                className="w-full sp-input sp-input-glow rounded-lg px-4 py-3"
+                placeholder="••••••••"
                 required
               />
             </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-green-700 text-white font-medium disabled:opacity-50 hover:bg-green-800 transition-colors"
+              className="w-full sp-btn-primary py-3 rounded-lg font-semibold text-base disabled:opacity-50 mt-6"
             >
-              {loading ? 'Updating...' : 'Reset password'}
+              {loading ? 'Resetting...' : 'Reset Password'}
             </button>
           </form>
         )}
 
-        {step === 'done' && (
-          <div className="mt-6 text-center space-y-4">
-            <p className="text-sm text-[#4a2c1a]">
-              Your password has been updated. You can log in now.
-            </p>
-            <button
-              type="button"
-              onClick={() => router.push('/auth/login')}
-              className="w-full py-2.5 rounded-lg bg-[#2c1810] text-[#f5f0e8] font-medium hover:bg-[#4a2c1a] transition-colors"
-            >
-              Go to login
-            </button>
-          </div>
-        )}
-
-        <p className="mt-6 text-center text-sm text-[#8b7355]">
-          <Link href="/auth/login" className="text-[#2c1810] hover:underline">
-            Back to login
+        {/* Back to Login Link */}
+        <p className="mt-6 text-center text-sm text-[var(--sp-text-muted)]">
+          Remember your password?{' '}
+          <Link href="/auth/login" className="text-[var(--sp-accent)] hover:underline font-semibold">
+            Sign in
           </Link>
         </p>
       </div>

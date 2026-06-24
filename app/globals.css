@@ -1,73 +1,208 @@
 @import "tailwindcss";
 
+/* === Design Tokens & Colors === */
+
 /* === Light Theme === */
 :root,
 [data-theme='light'] {
-  --sp-bg: #fdfcf9;          /* soft ivory background */
-  --sp-bg-soft: #f7f3ed;     /* slightly darker ivory */
+  --sp-bg: #f8fafc;          /* clean slate light bg */
+  --sp-bg-soft: #f1f5f9;     /* soft slate bg */
   --sp-card: #ffffff;        /* pure white cards */
-  --sp-text: #1f1f1f;        /* neutral dark gray for main text */
-  --sp-text-muted: #6b6b6b;  /* muted gray for secondary text */
-  --sp-text-body: #333333;   /* body text */
-  --sp-border: #d6cfc4;      /* warm beige border */
-  --sp-accent: #8b5e3c;      /* earthy brown accent */
-  --sp-accent-text: #ffffff; /* white text on accent */
-  --sp-highlight: #c49a6c;   /* golden highlight */
+  --sp-text: #0f172a;        /* slate-900 main text */
+  --sp-text-muted: #64748b;  /* slate-500 muted text */
+  --sp-text-body: #334155;   /* slate-700 body text */
+  --sp-border: #e2e8f0;      /* slate-200 border */
+  --sp-accent: #4f46e5;      /* deep indigo primary */
+  --sp-accent-hover: #4338ca;
+  --sp-accent-text: #ffffff;
+  --sp-secondary: #f43f5e;   /* vibrant rose */
+  --sp-highlight: #d97706;   /* amber gold */
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.04), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+  --shadow-glow: 0 0 20px -5px rgba(79, 70, 229, 0.15);
 
-  /* Font variables */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --glass-bg: rgba(248, 250, 252, 0.85);
+  --glass-border: rgba(226, 232, 240, 0.8);
 }
 
 /* === Dark Theme === */
 [data-theme='dark'] {
-  --sp-bg: #12100e;          /* deep charcoal background */
-  --sp-bg-soft: #1c1815;     /* softer charcoal */
-  --sp-card: #1f1b18;        /* muted dark card */
-  --sp-text: #f5f0e8;        /* ivory text */
-  --sp-text-muted: #b8a48a;  /* muted beige */
-  --sp-text-body: #e0d2c0;   /* warm light body text */
-  --sp-border: #3d3228;      /* dark border */
-  --sp-accent: #c49a6c;      /* golden accent */
-  --sp-accent-text: #12100e; /* dark text on accent */
-  --sp-highlight: #8b7355;   /* muted gold highlight */
+  --sp-bg: #080b11;          /* rich obsidian navy */
+  --sp-bg-soft: #111625;     /* midnight blue-slate */
+  --sp-card: #171e30;        /* slate-800 card */
+  --sp-text: #f8fafc;        /* slate-50 main text */
+  --sp-text-muted: #94a3b8;  /* slate-400 muted text */
+  --sp-text-body: #cbd5e1;   /* slate-300 body text */
+  --sp-border: #1e293b;      /* slate-800 border */
+  --sp-accent: #6366f1;      /* electric indigo primary */
+  --sp-accent-hover: #818cf8;
+  --sp-accent-text: #080b11;  /* dark text on primary */
+  --sp-secondary: #fb7185;   /* warm rose */
+  --sp-highlight: #fbbf24;   /* warm gold highlight */
 
-  /* Font variables */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+  --shadow-glow: 0 0 25px -5px rgba(99, 102, 241, 0.3);
+
+  --glass-bg: rgba(8, 11, 17, 0.85);
+  --glass-border: rgba(30, 41, 59, 0.8);
+}
+
+/* === Animations === */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 6px rgba(99, 102, 241, 0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+/* === Typography & Font Smoothing === */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* === Scrollbar Styling === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--sp-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sp-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sp-accent);
+}
+
+/* === Glassmorphism Utilities === */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-sm {
+  background: rgba(var(--glass-bg-rgb), 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
 }
 
 /* === Base Styles === */
 body {
   background: var(--sp-bg);
   color: var(--sp-text);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
 }
 
 /* === Cursor Fixes === */
 a, button {
-  cursor: pointer; /* hand cursor for links/buttons */
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 h1, h2, h3, h4, h5, h6 {
-  cursor: default; /* arrow cursor for headings */
+  cursor: default;
 }
 
-/* clickable headings inside links */
 a h1, a h2, a h3, a h4, a h5, a h6 {
   cursor: pointer;
 }
 
-
-/* === Component Styles === */
+/* === Component Styles & Helpers === */
 .sp-page {
   background: var(--sp-bg);
   color: var(--sp-text);
+  position: relative;
+}
+
+/* Sub-bg radial gradient for depth */
+.sp-page::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 600px;
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme='dark'] .sp-page::before {
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 60%);
 }
 
 .sp-card {
   background: var(--sp-card);
-  border-color: var(--sp-border);
+  border: 1px solid var(--sp-border);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sp-card-interactive {
+  background: var(--sp-card);
+  border: 1px solid var(--sp-border);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sp-card-interactive:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: var(--shadow-md), var(--shadow-glow);
 }
 
 .sp-muted {
@@ -80,16 +215,171 @@ a h1, a h2, a h3, a h4, a h5, a h6 {
 
 .sp-input {
   background: var(--sp-bg-soft);
-  border-color: var(--sp-border);
+  border: 1px solid var(--sp-border);
   color: var(--sp-text);
+  transition: all 0.2s ease;
+}
+
+.sp-input:focus {
+  outline: none;
+  border-color: var(--sp-accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  background: var(--sp-card);
 }
 
 .sp-btn-primary {
   background: var(--sp-accent);
   color: var(--sp-accent-text);
+  font-weight: 500;
+  box-shadow: 0 4px 10px -2px rgba(99, 102, 241, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sp-btn-primary:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -2px rgba(99, 102, 241, 0.4);
+}
+
+.sp-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* === Secondary Button === */
+.sp-btn-secondary {
+  background: transparent;
+  border: 2px solid var(--sp-accent);
+  color: var(--sp-accent);
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sp-btn-secondary:hover {
+  background: var(--sp-accent);
+  color: var(--sp-accent-text);
+  transform: translateY(-1px);
+}
+
+/* === Premium/Gold Button === */
+.sp-btn-premium {
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 6px 20px -5px rgba(217, 119, 6, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.sp-btn-premium::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.sp-btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -5px rgba(217, 119, 6, 0.6);
+}
+
+.sp-btn-premium:hover::before {
+  left: 100%;
+}
+
+/* === Error/Danger Button === */
+.sp-btn-danger {
+  background: transparent;
+  border: 2px solid var(--sp-secondary);
+  color: var(--sp-secondary);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sp-btn-danger:hover {
+  background: var(--sp-secondary);
+  color: #ffffff;
+}
+
+/* === Success Styling === */
+.success-badge {
+  background: #10b981;
+  color: #ffffff;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* === Warning/Alert Styling === */
+.alert-info {
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: var(--sp-accent);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+}
+
+[data-theme='dark'] .alert-info {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+/* === Input Focus Glow === */
+.sp-input-glow:focus {
+  outline: none;
+  border-color: var(--sp-accent);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2), inset 0 0 0 1px rgba(99, 102, 241, 0.1);
 }
 
 .sp-header {
-  background: var(--sp-accent);
-  color: var(--sp-accent-text);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--sp-border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* Custom Text Gradient */
+.text-gradient {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #f43f5e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme='dark'] .text-gradient {
+  background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #fb7185 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Pulsing Active Dot */
+@keyframes spPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+}
+
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  animation: spPulse 2s infinite;
 }
