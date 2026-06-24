@@ -5,10 +5,10 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 
 interface Note {
-  id: string
+  id: number // ✅ Fixed: Changed from string to number to match database int4
   content: string
   username: string
-  parent_note_id: string | null
+  parent_note_id: number | null // ✅ Fixed: Changed from string to number | null
   created_at: string
   score: number
 }
@@ -35,10 +35,11 @@ const PIN_COLORS = [
   'bg-white border border-gray-300 shadow-black/30'
 ]
 
-function getDeterministicStyle(id: string, array: string[]): string {
+function getDeterministicStyle(id: string | number, array: string[]): string {
+  const idStr = String(id)
   let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash)
+  for (let i = 0; i < idStr.length; i++) {
+    hash = idStr.charCodeAt(i) + ((hash << 5) - hash)
   }
   return array[Math.abs(hash) % array.length]
 }
@@ -55,7 +56,7 @@ export default function TopicPage() {
   const [error, setError] = useState('')
 
   const [isPopupOpen, setIsPopupOpen] = useState(false)
-  const [replyingToId, setReplyingToId] = useState<string | null>(null)
+  const [replyingToId, setReplyingToId] = useState<number | null>(null) // ✅ Fixed: number | null
 
   async function loadNotes() {
     const response = await fetch(`/api/notes?topicId=${topicId}`)
@@ -120,7 +121,7 @@ export default function TopicPage() {
     }
   }
 
-  const handleVote = async (noteId: string, voteValue: 1 | -1) => {
+  const handleVote = async (noteId: number, voteValue: 1 | -1) => { // ✅ Fixed: noteId number
     if (!session) {
       setError('Sign in to vote.')
       return
@@ -141,14 +142,14 @@ export default function TopicPage() {
     setIsPopupOpen(true)
   }
 
-  const openReplyPopup = (parentNoteId: string) => {
+  const openReplyPopup = (parentNoteId: number) => { // ✅ Fixed: parentNoteId number
     setReplyingToId(parentNoteId)
     setContent('')
     setError('')
     setIsPopupOpen(true)
   }
 
-  // Helper to re-arrange flat array into grouped threads for the chat UI
+  // ✅ Fixed: Safe comparison checks using String coercion to match strict types
   const getThreadedNotes = (): Note[] => {
     const rootNotes = notes.filter(n => !n.parent_note_id)
     const replyNotes = notes.filter(n => n.parent_note_id)
@@ -156,14 +157,12 @@ export default function TopicPage() {
 
     rootNotes.forEach(root => {
       orderedThreads.push(root)
-      // Grab all direct replies to this specific note
-      const directReplies = replyNotes.filter(reply => reply.parent_note_id === root.id)
+      const directReplies = replyNotes.filter(reply => String(reply.parent_note_id) === String(root.id))
       orderedThreads.push(...directReplies)
     })
 
-    // Fallback: If any detached replies exist, put them at the end
     replyNotes.forEach(reply => {
-      if (!orderedThreads.find(n => n.id === reply.id)) {
+      if (!orderedThreads.find(n => String(n.id) === String(reply.id))) {
         orderedThreads.push(reply)
       }
     })
@@ -172,7 +171,7 @@ export default function TopicPage() {
   }
 
   const threadedNotes = getThreadedNotes()
-  const parentNoteContext = notes.find(n => n.id === replyingToId)
+  const parentNoteContext = notes.find(n => String(n.id) === String(replyingToId))
 
   return (
     <div className="min-h-screen bg-[#3e2723] bg-[radial-gradient(#5d4037_1px,transparent_1px)] [background-size:16px_16px] pb-24 relative overflow-x-hidden">
@@ -237,11 +236,10 @@ export default function TopicPage() {
                   const pinColor = getDeterministicStyle(note.id, PIN_COLORS)
                   const rotation = (note.content.length % 7) - 3.5
                   
-                  // Shift replies to the right slightly to visual look like a nested chat feed
                   const isReply = !!note.parent_note_id
                   const xOffset = isReply 
-                    ? 32 + ((note.content.length % 3) * 4) // Shifted right for reply nesting
-                    : ((note.content.length % 5) * 4 - 8)  // Normal center shuffle
+                    ? 32 + ((note.content.length % 3) * 4) 
+                    : ((note.content.length % 5) * 4 - 8)  
                   
                   return (
                     <div 
@@ -249,7 +247,7 @@ export default function TopicPage() {
                       className="relative w-full flex flex-col items-center"
                       style={{ transform: `translateX(${xOffset}px)` }}
                     >
-                      {/* Red line connecting threads context */}
+                      {/* Thread Connection Path Visual */}
                       {isReply && (
                         <div className="absolute pointer-events-none -left-4 bottom-1/2 w-12 h-24 z-0">
                           <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
