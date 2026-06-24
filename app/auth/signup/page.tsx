@@ -14,6 +14,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [recoveryPhrase, setRecoveryPhrase] = useState('')
   const [copied, setCopied] = useState(false)
+  const [confirmed, setConfirmed] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -89,18 +90,9 @@ export default function SignupPage() {
               Your 12-Word Recovery Phrase
             </label>
             <div className="rounded-xl border-2 border-[var(--sp-border)] bg-[var(--sp-bg-soft)] p-6">
-              <div className="grid grid-cols-3 gap-4">
-                {recoveryPhrase.split(' ').map((word, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-[var(--sp-text-muted)] min-w-[1.5rem]">
-                      {index + 1}.
-                    </span>
-                    <span className="font-mono text-sm font-semibold text-[var(--sp-text)]">
-                      {word}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <p className="font-mono text-sm text-[var(--sp-text)] leading-relaxed break-words">
+                {recoveryPhrase}
+              </p>
             </div>
           </div>
 
@@ -121,8 +113,8 @@ export default function SignupPage() {
           <label className="flex items-start gap-3 p-4 rounded-lg border border-[var(--sp-border)] bg-[var(--sp-bg-soft)]">
             <input
               type="checkbox"
-              checked={copied}
-              onChange={(e) => setCopied(e.target.checked)}
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
               className="mt-1 w-4 h-4 rounded"
             />
             <span className="text-sm text-[var(--sp-text)]">
@@ -133,7 +125,7 @@ export default function SignupPage() {
           {/* Continue Button */}
           <button
             type="button"
-            disabled={!copied}
+            disabled={!confirmed}
             onClick={() => router.push('/')}
             className="w-full mt-6 sp-btn-primary py-3 rounded-lg font-semibold text-base disabled:opacity-50"
           >

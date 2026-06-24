@@ -19,6 +19,7 @@ interface Session {
 export default function HomePage() {
   const [topics, setTopics] = useState<Topic[]>([])
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
   const [showSuggest, setShowSuggest] = useState(false)
   const [title, setTitle] = useState('')
@@ -27,6 +28,11 @@ export default function HomePage() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
     async function loadData() {
       try {
         const sessionRes = await fetch('/api/auth/session')
@@ -48,7 +54,7 @@ export default function HomePage() {
     }
 
     loadData()
-  }, [])
+  }, [mounted])
 
   const handleSuggestTopic = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -84,8 +90,14 @@ export default function HomePage() {
 
   return (
     <div className="sp-page min-h-screen">
-      {/* Modern Glassmorphic Header */}
-      <header className="sp-header border-b border-[var(--sp-border)]">
+      {!mounted || loading ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-[var(--sp-text-muted)]">Loading...</p>
+        </div>
+      ) : (
+        <>
+          {/* Modern Glassmorphic Header */}
+          <header className="sp-header border-b border-[var(--sp-border)]">
         <div className="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--sp-accent)] to-[var(--sp-secondary)] flex items-center justify-center">
@@ -297,6 +309,8 @@ export default function HomePage() {
           )}
         </section>
       </main>
+        </>
+      )}
     </div>
   )
 }

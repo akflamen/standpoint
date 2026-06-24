@@ -47,7 +47,7 @@ function LoginForm() {
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--sp-accent)] to-[var(--sp-secondary)] flex items-center justify-center mx-auto mb-4">
           <span className="text-white font-bold text-xl">S</span>
         </div>
-        <h2 className="text-3xl font-bold text-[var(--sp-text)]">Welcome back</h2>
+        <h2 className="text-3xl font-bold text-[var(--sp-text)]">Log In</h2>
         <p className="mt-2 text-[var(--sp-text-muted)]">Sign in to your Standpoint account</p>
       </div>
 
