@@ -1,6 +1,9 @@
 import { supabase } from './supabase'
 import crypto from 'crypto'
 
+/**
+ * Hash a password securely using PBKDF2
+ */
 export async function hashPassword(password: string): Promise<string> {
   const salt = crypto.randomBytes(16).toString('hex')
   const hash = crypto
@@ -9,6 +12,9 @@ export async function hashPassword(password: string): Promise<string> {
   return `${salt}:${hash}`
 }
 
+/**
+ * Verify a password against its stored hash
+ */
 export async function verifyPassword(
   password: string,
   storedHash: string
@@ -20,17 +26,29 @@ export async function verifyPassword(
   return hash === verifyHash
 }
 
+/**
+ * Hash a recovery phrase securely
+ * Normalize spaces before hashing so signup and reset match
+ */
 export async function hashPhrase(phrase: string): Promise<string> {
-  return hashPassword(phrase)
+  const normalized = phrase.trim().replace(/\s+/g, ' ')
+  return hashPassword(normalized)
 }
 
+/**
+ * Verify a recovery phrase against its stored hash
+ */
 export async function verifyPhrase(
   phrase: string,
   storedHash: string
 ): Promise<boolean> {
-  return verifyPassword(phrase, storedHash)
+  const normalized = phrase.trim().replace(/\s+/g, ' ')
+  return verifyPassword(normalized, storedHash)
 }
 
+/**
+ * Fetch user by username
+ */
 export async function getUserByUsername(username: string) {
   const { data, error } = await supabase
     .from('accounts')
@@ -42,6 +60,9 @@ export async function getUserByUsername(username: string) {
   return data
 }
 
+/**
+ * Update user password
+ */
 export async function updateUserPassword(userId: string, newPassword: string) {
   const hashedPassword = await hashPassword(newPassword)
   const { error } = await supabase

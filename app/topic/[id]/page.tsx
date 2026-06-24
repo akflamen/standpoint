@@ -106,7 +106,7 @@ export default function TopicPage() {
 
   return (
     <div className="sp-page min-h-screen">
-      <header className="sp-header border-b border-[var(--sp-border)]">
+      <header className="sp-header border-b border-(--sp-border)">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="text-sm hover:text-[#c4a882] transition-colors">
             ← Back to topics
