@@ -102,7 +102,6 @@ export default function TopicPage() {
       const response = await fetch('/api/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // Fixed here: matches parentNoteId parameter expected by route.ts
         body: JSON.stringify({ topicId, content, parentNoteId: replyingToId }),
       })
       const data = await response.json()
@@ -149,6 +148,30 @@ export default function TopicPage() {
     setIsPopupOpen(true)
   }
 
+  // Helper to re-arrange flat array into grouped threads for the chat UI
+  const getThreadedNotes = (): Note[] => {
+    const rootNotes = notes.filter(n => !n.parent_note_id)
+    const replyNotes = notes.filter(n => n.parent_note_id)
+    const orderedThreads: Note[] = []
+
+    rootNotes.forEach(root => {
+      orderedThreads.push(root)
+      // Grab all direct replies to this specific note
+      const directReplies = replyNotes.filter(reply => reply.parent_note_id === root.id)
+      orderedThreads.push(...directReplies)
+    })
+
+    // Fallback: If any detached replies exist, put them at the end
+    replyNotes.forEach(reply => {
+      if (!orderedThreads.find(n => n.id === reply.id)) {
+        orderedThreads.push(reply)
+      }
+    })
+
+    return orderedThreads
+  }
+
+  const threadedNotes = getThreadedNotes()
   const parentNoteContext = notes.find(n => n.id === replyingToId)
 
   return (
@@ -195,7 +218,7 @@ export default function TopicPage() {
               <p className="text-amber-100/80 text-xl font-bold mt-1">Total Evidence Items: {notes.length}</p>
             </div>
 
-            {notes.length === 0 ? (
+            {threadedNotes.length === 0 ? (
               <div className="rounded-2xl border-4 border-dashed border-[#5d4037] bg-[#2d1a12]/40 p-16 text-center text-amber-100/40 max-w-md mx-auto relative backdrop-blur-sm">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-red-600 rounded-full shadow-md"></div>
                 <p className="font-mono text-lg font-bold uppercase tracking-wider text-amber-600">Board Clear</p>
@@ -209,12 +232,16 @@ export default function TopicPage() {
               </div>
             ) : (
               <div className="flex flex-col gap-12 relative">
-                {notes.map((note) => {
+                {threadedNotes.map((note) => {
                   const stickyColor = getDeterministicStyle(note.id, STICKY_COLORS)
                   const pinColor = getDeterministicStyle(note.id, PIN_COLORS)
                   const rotation = (note.content.length % 7) - 3.5
-                  const xOffset = (note.content.length % 5) * 4 - 8
+                  
+                  // Shift replies to the right slightly to visual look like a nested chat feed
                   const isReply = !!note.parent_note_id
+                  const xOffset = isReply 
+                    ? 32 + ((note.content.length % 3) * 4) // Shifted right for reply nesting
+                    : ((note.content.length % 5) * 4 - 8)  // Normal center shuffle
                   
                   return (
                     <div 
@@ -222,16 +249,17 @@ export default function TopicPage() {
                       className="relative w-full flex flex-col items-center"
                       style={{ transform: `translateX(${xOffset}px)` }}
                     >
+                      {/* Red line connecting threads context */}
                       {isReply && (
-                        <div className="absolute pointer-events-none left-1/2 bottom-full w-full h-12 flex items-center justify-center z-0">
+                        <div className="absolute pointer-events-none -left-4 bottom-1/2 w-12 h-24 z-0">
                           <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
                             <path 
-                              d="M 50 0 Q 35 50, 50 100" 
+                              d="M 0 0 L 50 100" 
                               fill="none" 
                               stroke="#dc2626" 
-                              strokeWidth="3" 
-                              strokeDasharray="4 2"
-                              className="opacity-80 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" 
+                              strokeWidth="4" 
+                              strokeDasharray="4 3"
+                              className="opacity-90 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]" 
                             />
                           </svg>
                         </div>
