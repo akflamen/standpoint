@@ -84,7 +84,7 @@ export default function HomePage() {
 
   return (
     <div className="sp-page min-h-screen">
-      <header className="sp-header border-b border-[var(--sp-border)]">
+      <header className="sp-header border-b border-(--sp-border)">
         <div className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-[#c4a882]">
