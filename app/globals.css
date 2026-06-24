@@ -1,43 +1,59 @@
 @import "tailwindcss";
 
+/* === Light Theme === */
 :root,
 [data-theme='light'] {
-  --sp-bg: #f5f0e8;
-  --sp-bg-soft: #faf8f4;
-  --sp-card: #ffffff;
-  --sp-text: #2c1810;
-  --sp-text-muted: #8b7355;
-  --sp-text-body: #4a2c1a;
-  --sp-border: #d4c4a8;
-  --sp-accent: #2c1810;
-  --sp-accent-text: #f5f0e8;
-  --sp-highlight: #c4a882;
-}
+  --sp-bg: #fdfcf9;          /* soft ivory background */
+  --sp-bg-soft: #f7f3ed;     /* slightly darker ivory */
+  --sp-card: #ffffff;        /* pure white cards */
+  --sp-text: #1f1f1f;        /* neutral dark gray for main text */
+  --sp-text-muted: #6b6b6b;  /* muted gray for secondary text */
+  --sp-text-body: #333333;   /* body text */
+  --sp-border: #d6cfc4;      /* warm beige border */
+  --sp-accent: #8b5e3c;      /* earthy brown accent */
+  --sp-accent-text: #ffffff; /* white text on accent */
+  --sp-highlight: #c49a6c;   /* golden highlight */
 
-[data-theme='dark'] {
-  --sp-bg: #14100d;
-  --sp-bg-soft: #1c1713;
-  --sp-card: #221c17;
-  --sp-text: #f5f0e8;
-  --sp-text-muted: #b8a48a;
-  --sp-text-body: #dcc9b0;
-  --sp-border: #3d3228;
-  --sp-accent: #c4a882;
-  --sp-accent-text: #14100d;
-  --sp-highlight: #8b7355;
-}
-
-@theme inline {
+  /* Font variables */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/* === Dark Theme === */
+[data-theme='dark'] {
+  --sp-bg: #12100e;          /* deep charcoal background */
+  --sp-bg-soft: #1c1815;     /* softer charcoal */
+  --sp-card: #1f1b18;        /* muted dark card */
+  --sp-text: #f5f0e8;        /* ivory text */
+  --sp-text-muted: #b8a48a;  /* muted beige */
+  --sp-text-body: #e0d2c0;   /* warm light body text */
+  --sp-border: #3d3228;      /* dark border */
+  --sp-accent: #c49a6c;      /* golden accent */
+  --sp-accent-text: #12100e; /* dark text on accent */
+  --sp-highlight: #8b7355;   /* muted gold highlight */
+
+  /* Font variables */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* === Base Styles === */
 body {
   background: var(--sp-bg);
   color: var(--sp-text);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* === Cursor Fixes === */
+a, button {
+  cursor: pointer; /* hand cursor for links/buttons */
+}
+
+h1, h2, h3, h4, h5, h6 {
+  cursor: default; /* arrow cursor for headings */
+}
+
+/* === Component Styles === */
 .sp-page {
   background: var(--sp-bg);
   color: var(--sp-text);
