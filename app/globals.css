@@ -53,6 +53,12 @@ h1, h2, h3, h4, h5, h6 {
   cursor: default; /* arrow cursor for headings */
 }
 
+/* clickable headings inside links */
+a h1, a h2, a h3, a h4, a h5, a h6 {
+  cursor: pointer;
+}
+
+
 /* === Component Styles === */
 .sp-page {
   background: var(--sp-bg);
