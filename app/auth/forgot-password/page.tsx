@@ -16,16 +16,39 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleCredentialsSubmit = (e: FormEvent) => {
+  // Step 1: Verify phrase
+  const handleCredentialsSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
+
     if (!username.trim() || !phrase.trim()) {
       setError('Username and recovery phrase are required')
       return
     }
-    setStep('newPassword')
+
+    setLoading(true)
+    try {
+      const res = await fetch('/api/auth/verify-phrase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, phrase }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Phrase verification failed')
+      }
+
+      // ✅ Only move forward if phrase is valid
+      setStep('newPassword')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Phrase verification failed')
+    } finally {
+      setLoading(false)
+    }
   }
 
+  // Step 2: Reset password
   const handlePasswordSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
@@ -102,9 +125,10 @@ export default function ForgotPasswordPage() {
             </div>
             <button
               type="submit"
+              disabled={loading}
               className="w-full py-2.5 rounded-lg bg-[#2c1810] text-[#f5f0e8] font-medium hover:bg-[#4a2c1a] transition-colors"
             >
-              Continue
+              {loading ? 'Checking...' : 'Continue'}
             </button>
           </form>
         )}
