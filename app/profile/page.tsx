@@ -50,9 +50,6 @@ export default function ProfilePage() {
 
   if (!profile) return null
 
-  // Calculate influence percentage (0-100)
-  const influencePercent = Math.min(Math.max((profile.voteWeight / 10) * 100, 0), 100)
-
   return (
     <div className="min-h-screen bg-[#3e2723] bg-[radial-gradient(#5d4037_1px,transparent_1px)] [background-size:16px_16px] px-4 py-12 pb-24 relative overflow-x-hidden">
       <div className="max-w-3xl mx-auto">
@@ -106,53 +103,10 @@ export default function ProfilePage() {
           {/* Grid Layout of pinned visual components */}
           <div className="grid gap-8 sm:grid-cols-2 items-start">
             
-            {/* Vote Influence Card - Styled like a Manila Document clipping */}
-            <div className="bg-[#ffedd5] text-orange-950 border border-[#fed7aa] p-6 relative shadow-[4px_4px_12px_rgba(0,0,0,0.3)] transform -rotate-1 rounded-sm">
-              {/* Top Pushpin */}
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center">
-                <div className="w-3.5 h-3.5 rounded-full bg-blue-600 shadow-md relative after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:w-1 after:h-1 after:bg-white/60 after:rounded-full"></div>
-                <div className="w-[1px] h-2 bg-gray-400/80 shadow-sm"></div>
-              </div>
-
-              <div className="flex items-center justify-between mb-4 font-mono">
-                <h3 className="text-xs uppercase tracking-wider font-black opacity-70">
-                  ⚡ Impact Metric
-                </h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-orange-900/10 border border-orange-900/20 uppercase">
-                  {profile.voteWeightLabel}
-                </span>
-              </div>
-
-              <p className="text-4xl font-mono font-black tracking-tight text-orange-950 mb-2">
-                {(profile.voteWeight * 10).toFixed(0)}%
-              </p>
-              <p className="text-xs font-mono font-bold opacity-60 uppercase mb-4 tracking-wide">
-                Current Matrix Authority Weight
-              </p>
-
-              {/* Visual Progress Track Meter */}
-              <div className="mb-4">
-                <div className="h-2 rounded-full bg-orange-950/10 overflow-hidden p-[1px] border border-orange-950/10">
-                  <div
-                    className="h-full bg-orange-800 rounded-full transition-all duration-500"
-                    style={{ width: `${influencePercent}%` }}
-                  />
-                </div>
-                <div className="mt-2 flex justify-between text-[10px] font-mono opacity-60 font-bold">
-                  <span>LOW INFLUENCE</span>
-                  <span>MAX BASELINE</span>
-                </div>
-              </div>
-
-              <p className="font-serif text-xs leading-relaxed opacity-80 border-t border-orange-950/10 pt-3">
-                Your standpoint node weight scales automatically based on consecutive community interactions. Idle credentials slowly experience clearance dampening.
-              </p>
-            </div>
-
             {/* Last Topic Visited Card - Styled like an Index Card file */}
             <div className="bg-[#fff7ed] text-amber-950 border border-[#fed7aa] p-6 relative shadow-[4px_4px_12px_rgba(0,0,0,0.3)] transform rotate-1 rounded-sm">
               {/* Top Pushpin */}
-              <div className="absolute -top-3 left-1/3 -translate-x-1/2 z-10 flex flex-col items-center">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center">
                 <div className="w-3.5 h-3.5 rounded-full bg-red-600 shadow-md relative after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:w-1 after:h-1 after:bg-white/60 after:rounded-full"></div>
                 <div className="w-[1px] h-2 bg-gray-400/80 shadow-sm"></div>
               </div>
@@ -200,7 +154,7 @@ export default function ProfilePage() {
             {/* Security Clearance Hierarchy Card (Old Subscription Card) */}
             <div className="bg-[#fee2e2] text-red-950 border border-[#fecaca] p-6 relative shadow-[4px_4px_12px_rgba(0,0,0,0.3)] transform rotate-2 rounded-sm">
               {/* Top Pushpin */}
-              <div className="absolute -top-3 left-2/3 -translate-x-1/2 z-10 flex flex-col items-center">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center">
                 <div className="w-3.5 h-3.5 rounded-full bg-green-600 shadow-md relative after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:w-1 after:h-1 after:bg-white/60 after:rounded-full"></div>
                 <div className="w-[1px] h-2 bg-gray-400/80 shadow-sm"></div>
               </div>
@@ -225,7 +179,7 @@ export default function ProfilePage() {
                   href="/premium"
                   className="bg-red-800 hover:bg-red-700 text-red-50 font-mono text-xs uppercase text-center py-2.5 rounded font-bold shadow block tracking-widest transition-all"
                 >
-                  REQUEST ELEVATED ACCESS
+                  PREMIUM ACCESS UPGRADE
                 </Link>
               )}
             </div>
@@ -278,7 +232,7 @@ export default function ProfilePage() {
               }}
               className="bg-red-950/60 hover:bg-red-950 border border-red-900 text-red-400 px-5 py-2 rounded text-xs font-bold uppercase tracking-wider transition-all shadow-md"
             >
-              Purge Authorization Tokens (Log Out)
+              (Log Out)
             </button>
           </div>
 

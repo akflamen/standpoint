@@ -42,13 +42,21 @@ function LoginForm() {
 
   return (
     <div className="max-w-md w-full">
+      {/* Back Button to Homepage */}
+      <Link
+        href="/"
+        className="absolute top-4 left-4 text-xs font-mono text-amber-900/60 hover:text-amber-900 transition-colors flex items-center gap-1"
+      >
+        ← Home
+      </Link>
+
       {/* Header Block */}
       <div className="text-center mb-6">
         <span className="text-[10px] font-mono font-black uppercase tracking-widest px-2 py-0.5 rounded bg-amber-900/10 border border-amber-900/10 inline-block text-amber-900 mb-3">
           SECURE PERIMETER LOGIN
         </span>
         <h2 className="text-3xl font-serif font-black tracking-tight text-amber-950">
-          Account Sign In
+          Account Login
         </h2>
         <p className="mt-1 text-xs font-mono opacity-60 uppercase tracking-wide">
           Provide access credentials to authorize entry
