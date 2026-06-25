@@ -1,49 +1,78 @@
+// lib/vote-weight.ts
+
 export const VOTE_WEIGHT = {
-  MIN: 25,
+  MIN: 0,                    // Start at 0
   MAX: 100,
-  NEW_USER: 30,
-  PREMIUM_MIN: 35,
-  PREMIUM_NEW: 40,
-  VOTE_BOOST: 4,
-  PREMIUM_VOTE_BOOST: 6,
-  GRACE_DAYS: 14,
-  DECAY_PER_DAY: 3,
+  INCREMENT_PER_VOTE: 2,     // Each vote adds 2% weight
+  DECAY_PER_DAY: 1,          // Lose 1% per day after grace period
+  GRACE_DAYS: 7,            // 7 days grace before decay starts
+  PREMIUM_BOOST: 1.5,       // Premium users get 1.5x increment
 } as const
 
-export function applyInactivityDecay(
-  storedWeight: number,
+export function calculateUserWeight(
+  voteCount: number,
   lastVoteAt: string | null,
-  premium: boolean
+  isPremium: boolean
 ): number {
-  const floor = premium ? VOTE_WEIGHT.PREMIUM_MIN : VOTE_WEIGHT.MIN
-  let weight = storedWeight || (premium ? VOTE_WEIGHT.PREMIUM_NEW : VOTE_WEIGHT.NEW_USER)
+  // Calculate base weight from vote count
+  const increment = isPremium ? VOTE_WEIGHT.PREMIUM_BOOST : VOTE_WEIGHT.INCREMENT_PER_VOTE
+  let weight = Math.min(voteCount * increment, VOTE_WEIGHT.MAX)
 
-  if (!lastVoteAt) {
-    return clamp(weight, floor, VOTE_WEIGHT.MAX)
+  // Apply inactivity decay
+  if (lastVoteAt) {
+    const daysIdle = (Date.now() - new Date(lastVoteAt).getTime()) / (1000 * 60 * 60 * 24)
+    if (daysIdle > VOTE_WEIGHT.GRACE_DAYS) {
+      weight -= (daysIdle - VOTE_WEIGHT.GRACE_DAYS) * VOTE_WEIGHT.DECAY_PER_DAY
+    }
   }
 
-  const daysIdle =
-    (Date.now() - new Date(lastVoteAt).getTime()) / (1000 * 60 * 60 * 24)
+  return clamp(weight, VOTE_WEIGHT.MIN, VOTE_WEIGHT.MAX)
+}
 
-  if (daysIdle > VOTE_WEIGHT.GRACE_DAYS) {
-    weight -= (daysIdle - VOTE_WEIGHT.GRACE_DAYS) * VOTE_WEIGHT.DECAY_PER_DAY
+// User always sees their own vote as 100% (1)
+export function getUserDisplayWeight(actualWeight: number): number {
+  if (actualWeight === 0) return 0
+  return 100 // Always show 100% for own votes
+}
+
+// Other users see the actual calculated weight
+export function getActualWeightForOthers(actualWeight: number): number {
+  return Math.round(actualWeight)
+}
+
+// Calculate combined vote from multiple users
+export function calculateCombinedVote(weights: number[]): {
+  fullVotes: number
+  remainder: number
+  totalWeight: number
+} {
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0)
+  const fullVotes = Math.floor(totalWeight / 100) // Each 100% = 1 full vote
+  const remainder = totalWeight - (fullVotes * 100)
+  
+  return { 
+    fullVotes, 
+    remainder, 
+    totalWeight: Math.round(totalWeight * 100) / 100 
   }
-
-  return clamp(weight, floor, VOTE_WEIGHT.MAX)
 }
 
-export function boostWeightAfterVote(
-  currentWeight: number,
-  premium: boolean
+// Increment vote count after voting
+export function incrementWeightAfterVote(
+  currentVoteCount: number,
+  isPremium: boolean
 ): number {
-  const boost = premium ? VOTE_WEIGHT.PREMIUM_VOTE_BOOST : VOTE_WEIGHT.VOTE_BOOST
-  return clamp(currentWeight + boost, premium ? VOTE_WEIGHT.PREMIUM_MIN : VOTE_WEIGHT.MIN, VOTE_WEIGHT.MAX)
+  return currentVoteCount + 1 // Each vote adds 1 to count
 }
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value))
+// Get display weight for a user (for other users)
+export function formatVoteWeight(weight: number, isOwnView: boolean = false): string {
+  if (isOwnView && weight > 0) {
+    return "100%" // Own votes always show as 100%
+  }
+  return `${Math.round(weight)}%`
 }
 
-export function formatVoteWeight(weight: number) {
-  return `${weight}%`
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
 }
