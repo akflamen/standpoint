@@ -1,12 +1,13 @@
 // lib/vote-weight.ts
 
 export const VOTE_WEIGHT = {
-  MIN: 0,                    // Start at 0
-  MAX: 100,
-  INCREMENT_PER_VOTE: 2,     // Each vote adds 2% weight
+  MIN: 0,                    // Minimum weight (start at 0)
+  MAX: 100,                  // Maximum weight (100%)
+  NEW_USER: 0,              // New users start at 0
+  INCREMENT_PER_VOTE: 2,     // Normal users: each vote adds 2% weight
+  PREMIUM_INCREMENT_PER_VOTE: 4, // Premium users: each vote adds 4% weight (faster)
   DECAY_PER_DAY: 1,          // Lose 1% per day after grace period
   GRACE_DAYS: 7,            // 7 days grace before decay starts
-  PREMIUM_BOOST: 1.5,       // Premium users get 1.5x increment
 } as const
 
 export function calculateUserWeight(
@@ -15,7 +16,11 @@ export function calculateUserWeight(
   isPremium: boolean
 ): number {
   // Calculate base weight from vote count
-  const increment = isPremium ? VOTE_WEIGHT.PREMIUM_BOOST : VOTE_WEIGHT.INCREMENT_PER_VOTE
+  // Premium users gain weight faster (4% per vote vs 2% for normal)
+  const increment = isPremium 
+    ? VOTE_WEIGHT.PREMIUM_INCREMENT_PER_VOTE 
+    : VOTE_WEIGHT.INCREMENT_PER_VOTE
+  
   let weight = Math.min(voteCount * increment, VOTE_WEIGHT.MAX)
 
   // Apply inactivity decay

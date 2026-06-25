@@ -74,7 +74,10 @@ export async function POST(req: NextRequest) {
         phrase_hash: phraseHash,
         premium: false,
         banned: false,
-        vote_weight: VOTE_WEIGHT.NEW_USER,
+        vote_weight: VOTE_WEIGHT.NEW_USER,  // 0
+        vote_count: 0,                      // Start with 0 votes
+        total_votes_cast: 0,               // Start with 0 total votes
+        last_vote_at: null,                // No votes yet
       })
       .select('id')
       .single()
@@ -92,6 +95,7 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({
       username: trimmedUsername,
       recoveryPhrase,
+      voteWeight: 0, // New users start at 0
     })
     attachSessionCookie(response, token, false)
 

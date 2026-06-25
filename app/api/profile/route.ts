@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookies } from '@/lib/session'
 import { supabaseAdmin } from '@/lib/supabase'
-import { applyInactivityDecay, formatVoteWeight } from '@/lib/vote-weight'
 
 export async function GET() {
   try {
@@ -33,18 +32,12 @@ export async function GET() {
       }
     }
 
-    const currentWeight = applyInactivityDecay(
-      Number(account.vote_weight ?? 0.3),
-      account.last_vote_at,
-      Boolean(account.premium)
-    )
+
 
     return NextResponse.json({
       profile: {
         username: account.username,
         premium: Boolean(account.premium),
-        voteWeight: currentWeight,
-        voteWeightLabel: formatVoteWeight(currentWeight),
         lastTopic,
       },
     })

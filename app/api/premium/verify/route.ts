@@ -1,7 +1,9 @@
+// app/api/premium/verify/route.ts
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromRequest } from '@/lib/session'
 import { supabaseAdmin } from '@/lib/supabase'
-import { VOTE_WEIGHT } from '@/lib/vote-weight'
+import { VOTE_WEIGHT, calculateUserWeight } from '@/lib/vote-weight'  // ← Add calculateUserWeight here
 
 export async function POST(req: NextRequest) {
   try {
@@ -49,23 +51,51 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Get current user data to preserve vote count
+    const { data: currentUser } = await supabaseAdmin
+      .from('accounts')
+      .select('vote_count, total_votes_cast')
+      .eq('id', session.userId)
+      .single()
+
+    // Update account to premium - keep vote_count the same
     const { error: premiumError } = await supabaseAdmin
       .from('accounts')
       .update({
         premium: true,
-        vote_weight: VOTE_WEIGHT.PREMIUM_NEW,
+        vote_count: currentUser?.vote_count || 0,
+        total_votes_cast: currentUser?.total_votes_cast || 0,
       })
       .eq('id', session.userId)
 
     if (premiumError) {
+      console.error('Premium activation error:', premiumError)
       return NextResponse.json({ error: 'Could not activate premium' }, { status: 500 })
     }
 
+    // Delete the payment intent
     await supabaseAdmin.from('payment_intents').delete().eq('id', intent.id)
+
+    // Calculate new weight with premium benefits
+    const { data: updatedUser } = await supabaseAdmin
+      .from('accounts')
+      .select('vote_count, premium')
+      .eq('id', session.userId)
+      .single()
+
+    const newWeight = calculateUserWeight(
+      updatedUser?.vote_count || 0,
+      new Date().toISOString(),
+      true // isPremium
+    )
 
     return NextResponse.json({
       message: 'Premium activated',
       premium: true,
+      voteWeight: newWeight,
+      voteCount: updatedUser?.vote_count || 0,
+      // Premium users now gain 4% per vote instead of 2%
+      weightPerVote: VOTE_WEIGHT.PREMIUM_INCREMENT_PER_VOTE,
     })
   } catch (err) {
     console.error('Premium verify error:', err)
