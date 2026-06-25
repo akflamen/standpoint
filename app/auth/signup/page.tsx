@@ -74,6 +74,14 @@ export default function SignupPage() {
             <div className="w-[1px] h-2 bg-gray-400/80 shadow-sm"></div>
           </div>
 
+          {/* Back Button */}
+          <button
+            onClick={() => setStep('form')}
+            className="absolute top-4 left-4 text-xs font-mono text-lime-900/60 hover:text-lime-900 transition-colors flex items-center gap-1"
+          >
+            ← Back
+          </button>
+
           {/* Header */}
           <div className="text-center mb-6">
             <span className="text-[10px] font-mono font-black uppercase tracking-widest px-2 py-0.5 rounded bg-lime-900/10 border border-lime-900/10 inline-block text-lime-900 mb-3">
@@ -159,6 +167,14 @@ export default function SignupPage() {
           <div className="w-3.5 h-3.5 rounded-full bg-blue-600 shadow-md relative after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:w-1 after:h-1 after:bg-white/60 after:rounded-full"></div>
           <div className="w-[1px] h-2 bg-gray-400/80 shadow-sm"></div>
         </div>
+
+        {/* Back Button to Homepage */}
+        <Link
+          href="/"
+          className="absolute top-4 left-4 text-xs font-mono text-amber-900/60 hover:text-amber-900 transition-colors flex items-center gap-1"
+        >
+          ← Home
+        </Link>
 
         {/* Header Block */}
         <div className="text-center mb-6">

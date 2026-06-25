@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing topicId' }, { status: 400 })
     }
 
-    const { data: notes, error } = await supabase
+    const { data: notes, error } = await supabaseAdmin
       .from('notes')
       .select(`
         id,

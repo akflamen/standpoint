@@ -33,6 +33,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Handle logout - redirect to homepage
+  if (path === '/auth/logout') {
+    const response = NextResponse.redirect(new URL('/', request.url))
+    // Clear session cookie
+    response.cookies.delete('session')
+    return response
+  }
+
   // Public pages never redirect
   if (isPublicPage(path)) {
     return NextResponse.next()

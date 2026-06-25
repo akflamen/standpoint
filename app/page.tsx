@@ -141,6 +141,15 @@ export default function HomePage() {
                   <div className="flex items-center gap-3 bg-[#1a0e0a] px-4 py-1.5 rounded border border-amber-900">
                     <span className="text-amber-600 animate-pulse text-xs hidden sm:inline">● ACTIVE:</span>
                     <span className="font-bold text-white text-xs">@{session.username}</span>
+                    
+                    {/* Profile Button - navigates to profile page */}
+                    <Link
+                      href="/profile"
+                      className="ml-1 w-8 h-8 rounded-full bg-amber-700 hover:bg-amber-600 text-amber-50 flex items-center justify-center font-bold text-sm transition-all shadow-md hover:scale-105"
+                      aria-label="Profile"
+                    >
+                      {session.username.charAt(0).toUpperCase()}
+                    </Link>
                   </div>
                 ) : (
                   <>
